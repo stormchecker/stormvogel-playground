@@ -58,6 +58,22 @@ git checkout dev
 git pull origin dev
 ```
 
+#### **3. Some usefull things**
+Get information on what branch you are on, whether it is up-to-date, things to commit etc
+```bash
+git status
+```
+See all branches (and the one you are on)
+```bash
+git status
+```
+If you want to put changes in one file in seperate commits then you can only add specific changes of files with -p flag:
+```bash
+git add -p <file-name>
+```
+Go through the "hunks", y for accept add to commmit (stage), n for don't do that, q for quit adding.
+Don't forget to commit once you stages (added) everything you want to commit.
+
 ### **Development Workflow (continuous)**
 
 #### **1. Sync with the Latest Changes**
