@@ -102,9 +102,9 @@ git checkout -b feature/<your-name>/<feature-name>
 #### **4. When you stop working**
 If you are done with the feature (or you don't want to work in current branch anymore) then push changes.
 Continue with steps 5 till 9.
-    ```bash
-    git push -u origin feature/<your-name>/<feature-name>
-    ```
+```bash
+git push -u origin feature/<your-name>/<feature-name>
+```
 If you are not done with the feature and want to continue in your current branch later.
 Once you continue working do the following (synchronizing with dev branch)
 1. Commit work (alwasy before you swith branches):
