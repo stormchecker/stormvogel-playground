@@ -1,0 +1,89 @@
+# Python-related ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+instance/
+*.sqlite3
+*.db
+
+# Flask specific
+config.py
+*.log
+
+# Svelte project ignores (inside frontend directory)
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/package-lock.json
+frontend/dist/
+frontend/build/
+
+# Docker-related ignores
+docker-compose.override.yml
+.dockerignore
+*.bak
+*.tmp
+*.log
+
+# OS-specific ignores
+.DS_Store
+Thumbs.db
+
+# Editor ignores
+.idea/
+.vscode/
+*.swp
+*~
+
+# Byte-compiled, logs, and caches
+*.pyc
+*.pyo
+*.log
+
+# Virtual environment folders
+venv/
+.venv/
+
+# Dependencies and caches
+__pycache__/
+.cache/
+pytest_cache/
+
+# Git-related ignores
+*.orig
+
+# Coverage
+.coverage
+htmlcov/
+
+# Test-related
+.tox/
+.nox/
+*.cover
+.coverage.*
+.cache/
+junit-xml/
+results.xml
+
+# Build outputs
+build/
+dist/
+*.whl
+
+# Static files cache
+staticfiles/
+*.manifest
+
+# Local environment overrides
+.env
+.env.*
+.envrc
