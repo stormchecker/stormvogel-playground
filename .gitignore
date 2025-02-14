@@ -26,6 +26,7 @@ frontend/.svelte-kit/
 frontend/package-lock.json
 frontend/dist/
 frontend/build/
+frontend/public/build/
 
 # Docker-related ignores
 docker-compose.override.yml

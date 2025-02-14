@@ -27,12 +27,16 @@ project-root/
 ### **Backend Setup (Flask)**
 1. Install flask:
    ```bash
-   pip install flask
+    pip install flask
+    pip install flask_cors
    ```
 
 ### **Frontend Setup (Svelte)**
-1. (TODO!) 
-
+1. Install flask:
+   ```bash
+    npm install <in-frontend-folder> 
+    npm run dev
+    ```
 ---
 
 ## 🤝 Collaboration Guidelines
