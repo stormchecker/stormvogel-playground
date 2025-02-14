@@ -41,6 +41,7 @@ project-root/
 - `main`: Stable branch, with only stable versions of the project.
 - `dev`: Active development branch where features are integrated.
 - Feature branches: Named using the format `feature/<your-name>/<feature-name>`. For example, `feature/ben/usersessionfix`.
+- In general you never work on `main` or `dev` branches but only in feature branches that you merge to `dev`
 
 ### **Development Workflow (first time)**
 
@@ -65,7 +66,11 @@ git status
 ```
 See all branches (and the one you are on)
 ```bash
-git status
+git branch -a
+```
+To update all meta info locally (sync it with remote):
+```bash
+git fetch --all --prune
 ```
 If you want to put changes in one file in seperate commits then you can only add specific changes of files with -p flag:
 ```bash
@@ -77,8 +82,8 @@ Don't forget to commit once you stages (added) everything you want to commit.
 ### **Development Workflow (continuous)**
 
 #### **1. Sync with the Latest Changes**
-IMPORTANT: If you are continueing with a feature check step 4 (Synchronize with dev branch!)
-Switch to the `dev` branch and pull the latest changes:
+IMPORTANT: If you are continueing with a feature check step 4 (Synchronize with dev branch!).
+OTHERWISE: Switch to the `dev` branch and pull the latest changes:
 ```bash
 git checkout dev
 git pull origin dev
