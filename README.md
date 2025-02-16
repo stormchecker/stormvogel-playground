@@ -25,11 +25,19 @@ project-root/
 ## 🚀 Setup Instructions
 
 ### **Backend Setup (Flask)**
-1. Install flask:
-   ```bash
+1. install docker: deamon and cli (or docker-desktop:))
+    (TODO: further details)
+
+2. Install flask:
+    ```bash
     pip install flask
     pip install flask_cors
-   ```
+    ```
+
+3. Install python docker api:
+    ```bash
+    pip install docker
+    ```
 
 ### **Frontend Setup (Svelte)**
 1. Install flask:
@@ -37,7 +45,22 @@ project-root/
     npm install <in-frontend-folder> 
     npm run dev
     ```
+
+### **Running backend (Flask)**
+1. in backend folder:
+    ```bash
+    python3 app.py (--debug)
+    ```
+
+### **Running backend (Flask)**
+1. in frontend folder:
+    ```bash
+    npm run (build/dev)
+    ```
+
 ---
+
+### **
 
 ## 🤝 Collaboration Guidelines
 
