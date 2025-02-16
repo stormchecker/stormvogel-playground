@@ -1,5 +1,6 @@
 # Python-related ignores
 __pycache__/
+backend/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd

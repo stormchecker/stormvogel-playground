@@ -13,8 +13,8 @@ def start_sandbox(user_id):
         print(f"Reusing container {container.id} for user {user_id}")
     else:
         container = client.containers.run(
-            "stupefied_bose",  #stormvogel image
-            #runtime="runsc",  #gvisor runtime
+            "stormvogel",      #stormvogel container
+            runtime="runsc",   #gvisor runtime
             detach=True,
             name=container_name,
             stdin_open=True,
