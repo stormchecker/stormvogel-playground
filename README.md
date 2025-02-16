@@ -49,7 +49,7 @@ project-root/
 ### **Running backend (Flask)**
 1. in backend folder:
     ```bash
-    python3 app.py (--debug)
+    sudo python3 app.py
     ```
 
 ### **Running backend (Flask)**

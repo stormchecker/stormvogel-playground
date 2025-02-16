@@ -13,7 +13,31 @@ system = {
   let output = "";
   let error = "";
   let simulationSteps = [];
-  
+
+  async function startupBackend() {
+    try {
+        const response = await fetch('http://localhost:5000/startup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({}), 
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            console.log(result.message); 
+        } else {
+            console.error('Error:', result.message);
+        }
+    } catch (e) {
+        console.error('Failed to startup server backend:', e);
+    }
+  }  
+
+  startupBackend(); //not sure if this is the best way, probably not but ok for now
+
   async function executeCode() {
     try {
       const response = await fetch('http://localhost:5000/execute', {
@@ -21,7 +45,8 @@ system = {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code }), 
+        credentials: 'include'
       });
       
       const result = await response.json();
