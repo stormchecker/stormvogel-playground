@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   let code = `# Example configuration
 system = {
     "states": ["start", "active", "end"],
@@ -13,6 +14,38 @@ system = {
   let output = "";
   let error = "";
   let simulationSteps = [];
+
+  function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            const date = new Date();
+            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
+    }
+
+    // Get a cookie
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
+    }
+
+    // Save code to a cookie
+    function saveCode() {
+        setCookie("python_code", code, 7); // Save for 7 days
+        alert("Code saved!");
+    }
+
+    // Load code from a cookie
+    onMount(() => {
+        const savedCode = getCookie("python_code");
+        if (savedCode) {
+            code = savedCode;
+        }
+    });
+
 
   async function startupBackend() {
     try {
@@ -78,7 +111,7 @@ system = {
     <h1>Model Playground</h1>
     <nav>
       <button class="nav-btn">Examples</button>
-      <button class="nav-btn">Save</button>
+      <button class="nav-btn" on:click={saveCode}>Save</button>
     </nav>
   </header>
 
