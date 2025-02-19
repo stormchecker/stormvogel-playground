@@ -242,6 +242,7 @@
     resize: none;
     white-space: pre;
     tab-size: 4;
+    text-align: left;
   }
 
   .visualization-panel {
