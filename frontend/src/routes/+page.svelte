@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   let code = `# Example configuration
 system = {
     "states": ["start", "active", "end"],
@@ -13,6 +14,22 @@ system = {
   let output = "";
   let error = "";
   let simulationSteps = [];
+
+
+  // Save code to local storage
+    function saveCode() {
+        localStorage.setItem("python_code",code); // Save for a number of days
+        alert("Code saved!"); //TODO :change this to a nice saved button change or display it in another way
+    }
+
+    // Load code from local storage
+    onMount(() => {
+        const savedCode = localStorage.getItem("python_code");
+        if (savedCode) {
+            code = savedCode;
+        }
+    });
+
 
   async function startupBackend() {
     try {
@@ -78,7 +95,7 @@ system = {
     <h1>Model Playground</h1>
     <nav>
       <button class="nav-btn">Examples</button>
-      <button class="nav-btn">Save</button>
+      <button class="nav-btn" on:click={saveCode}>Save</button>
     </nav>
   </header>
 
@@ -160,7 +177,7 @@ system = {
     display: flex;
   }
 
-  .nav-btn {
+  .nav-btn   {
     background: #e6f0ff;
     color: #007acc;
     border: 1px solid #b3d1ff;
