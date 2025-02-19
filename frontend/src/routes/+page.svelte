@@ -15,32 +15,16 @@ system = {
   let error = "";
   let simulationSteps = [];
 
-  function setCookie(name, value, days) {
-        let expires = "";
-        if (days) {
-            const date = new Date();
-            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
-    }
 
-    // Get a cookie
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
-    }
-
-    // Save code to a cookie
+   
     function saveCode() {
-        setCookie("python_code", code, 7); // Save for 7 days
-        alert("Code saved!");
+        localStorage.setItem("python_code",code); // Save for a number of days
+        alert("Code saved!"); //TODO :change this to a nice saved button change or display it in another way
     }
 
     // Load code from a cookie
     onMount(() => {
-        const savedCode = getCookie("python_code");
+        const savedCode = localStorage.getItem("python_code");
         if (savedCode) {
             code = savedCode;
         }
@@ -193,7 +177,7 @@ system = {
     display: flex;
   }
 
-  .nav-btn {
+  .nav-btn   {
     background: #e6f0ff;
     color: #007acc;
     border: 1px solid #b3d1ff;
