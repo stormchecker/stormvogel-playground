@@ -16,13 +16,13 @@ system = {
   let simulationSteps = [];
 
 
-   
+  // Save code to local storage
     function saveCode() {
         localStorage.setItem("python_code",code); // Save for a number of days
         alert("Code saved!"); //TODO :change this to a nice saved button change or display it in another way
     }
 
-    // Load code from a cookie
+    // Load code from local storage
     onMount(() => {
         const savedCode = localStorage.getItem("python_code");
         if (savedCode) {
