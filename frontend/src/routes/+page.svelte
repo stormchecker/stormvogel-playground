@@ -1,23 +1,19 @@
 <script>
   import { onMount } from 'svelte';
-  let code = `# Example configuration
-system = {
-    "states": ["start", "active", "end"],
-    "transitions": [
-        {"from": "start", "to": "active", "probability": 0.8},
-        {"from": "start", "to": "end", "probability": 0.2},
-        {"from": "active", "to": "end", "probability": 1.0}
-    ]
-}`;
+  import { EditorView, basicSetup } from "codemirror";
+  import { python } from "@codemirror/lang-python";
+  let code = "";
 
   let specification = 'Calculate probability from start to end';
   let output = "";
   let error = "";
   let simulationSteps = [];
+  let editor;
 
 
   // Save code to local storage
     function saveCode() {
+        const code = editor.state.doc.toString(); // Get the code from the editor
         localStorage.setItem("python_code",code); // Save for a number of days
         alert("Code saved!"); //TODO :change this to a nice saved button change or display it in another way
     }
@@ -28,6 +24,12 @@ system = {
         if (savedCode) {
             code = savedCode;
         }
+
+      editor = new EditorView({
+        doc: code,
+        extensions: [basicSetup, python()],
+        parent: document.querySelector(".code-editor"),
+      });
     });
 
 
@@ -56,6 +58,7 @@ system = {
   startupBackend(); //not sure if this is the best way, probably not but ok for now
 
   async function executeCode() {
+    const code = editor.state.doc.toString();
     try {
       const response = await fetch('http://localhost:5000/execute', {
         method: 'POST',
@@ -105,11 +108,9 @@ system = {
         <span class="file-tab active">model.py</span>
         <button on:click={executeCode} class="nav-btn">Execute</button>
       </div>
-      <textarea
-        bind:value={code}
-        class="code-editor"
+      <div class="code-editor"
         placeholder="Enter your Python code here..."
-      ></textarea>
+      ></div>
     </div>
 
     <div class="visualization-panel">
@@ -231,8 +232,7 @@ system = {
 
   .code-editor {
     width: 100%;
-    padding: 1rem;
-    margin: 0;
+    padding: 0;
     height: calc(100vh - 220px);
     overflow: auto;
     background-color: #fff;
