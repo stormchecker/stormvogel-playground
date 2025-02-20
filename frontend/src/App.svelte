@@ -1,5 +1,4 @@
 <script>
-	import "./app.css";
 	import CodeExecutor from './routes/+page.svelte';
 	export let name;
 </script>
