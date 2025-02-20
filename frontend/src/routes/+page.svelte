@@ -161,6 +161,8 @@
     background-color: #ffffff;
     color: #333333;
     font-family: 'Arial', sans-serif;
+    height: 100vh;
+    overflow: hidden;
   }
 
   .container {
@@ -187,7 +189,7 @@
     display: flex;
   }
 
-  .nav-btn   {
+  .nav-btn {
     background: #e6f0ff;
     color: #007acc;
     border: 1px solid #b3d1ff;
@@ -209,6 +211,7 @@
     gap: 1rem;
     padding: 1rem;
     background-color: #fafafa;
+    overflow: hidden;
   }
 
   .code-panel {
@@ -216,6 +219,8 @@
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
   }
 
   .editor-header {
@@ -240,9 +245,7 @@
   }
 
   .code-editor {
-    width: 100%;
-    padding: 0;
-    height: calc(100vh - 220px);
+    flex-grow: 1;
     overflow: auto;
     background-color: #fff;
     color: #333;
@@ -258,6 +261,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    overflow: hidden;
   }
 
   .model-preview {
@@ -266,6 +270,7 @@
     border-radius: 4px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
   }
 
   .state-diagram {
