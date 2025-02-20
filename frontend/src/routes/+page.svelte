@@ -1,7 +1,9 @@
 <script>
   import { onMount } from 'svelte';
-  import { EditorView, basicSetup } from "codemirror";
-  import { python } from "@codemirror/lang-python";
+  import { EditorView, basicSetup } from "codemirror";  // Imports the editor
+  import { keymap } from "@codemirror/view";
+  import { indentWithTab } from "@codemirror/commands"; // Imports tab handling
+  import { python } from "@codemirror/lang-python";     // Imports Python syntax highlighting
   let code = "";
 
   let specification = 'Calculate probability from start to end';
@@ -22,7 +24,8 @@
     function createEditor() {
         editor = new EditorView({
             doc: code,
-            extensions: [basicSetup, python()],
+            // Sets up the editor with Python syntax highlighting and tab handling
+            extensions: [basicSetup, keymap.of([indentWithTab]), python()], 
             parent: document.querySelector(".code-editor"),
         });
     }
