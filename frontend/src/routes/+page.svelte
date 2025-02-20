@@ -18,18 +18,24 @@
         alert("Code saved!"); //TODO :change this to a nice saved button change or display it in another way
     }
 
-    // Load code from local storage
+    // Adds code editor with syntax highlighting
+    function createEditor() {
+        editor = new EditorView({
+            doc: code,
+            extensions: [basicSetup, python()],
+            parent: document.querySelector(".code-editor"),
+        });
+    }
+
     onMount(() => {
+        // Load code from local storage
         const savedCode = localStorage.getItem("python_code");
         if (savedCode) {
             code = savedCode;
         }
-
-      editor = new EditorView({
-        doc: code,
-        extensions: [basicSetup, python()],
-        parent: document.querySelector(".code-editor"),
-      });
+        
+        // Load the editor
+        createEditor();
     });
 
 
