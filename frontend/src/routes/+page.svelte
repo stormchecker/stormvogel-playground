@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { EditorView, basicSetup } from "codemirror";  // Imports the editor
   import { keymap } from "@codemirror/view";
   import { indentWithTab } from "@codemirror/commands"; // Imports tab handling
@@ -32,6 +32,7 @@
 
     onMount(() => {
         // Load code from local storage
+        window.addEventListener("beforeunload", saveCode);
         const savedCode = localStorage.getItem("python_code");
         if (savedCode) {
             code = savedCode;
@@ -39,6 +40,10 @@
         
         // Load the editor
         createEditor();
+    });
+
+    onDestroy(() => {
+        window.removeEventListener("beforeunload", saveCode);
     });
 
 
