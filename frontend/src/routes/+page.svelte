@@ -8,12 +8,20 @@
 
   let specification = 'Calculate probability from start to end';
   let output = "";
+  let debug_info = "";
   let error = "";
   let simulationSteps = [];
   let editor;
 
 
   // Save code to local storage
+
+    function htmlDecode(input) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(input, "text/html");
+      return doc.documentElement.textContent;
+    }
+
     function saveCode() {
         const code = editor.state.doc.toString(); // Get the code from the editor
         localStorage.setItem("python_code",code); // Save for a number of days
@@ -85,6 +93,7 @@
       
       const result = await response.json();
       output = result.output;
+      debug_info = result.logs;
       error = result.error;
     } catch (e) {
       error = "Failed to connect to execution server";
@@ -129,17 +138,10 @@
 
     <div class="visualization-panel">
       <div class="model-preview">
-        <div class="state-diagram">
-          <div class="state start">Start</div>
-          <div class="state active">Active</div>
-          <div class="state end">End</div>
-          <div class="transition start-active">0.8</div>
-          <div class="transition start-end">0.2</div>
-          <div class="transition active-end">1.0</div>
-        </div>
+        {@html output}
       </div>
       <div class="output-console">
-        <pre>{output}</pre>
+        <pre>{debug_info}</pre>
         <pre style="color: red;">{error}</pre>
       </div>
     </div>

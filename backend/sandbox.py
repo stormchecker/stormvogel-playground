@@ -1,5 +1,7 @@
 import docker
 import logging
+import re
+import html
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -50,12 +52,28 @@ def execute_code(user_id, code):
         exec_result = container.exec_run("python3 /tmp/script.py", stdout=True, stderr=True)
         output = exec_result.output.decode()
         logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
-        
+
         # Clean up
         container.exec_run("rm /tmp/script.py")
+
+        # separate output from debug information
+
+        # this part is very ugly, but it basically changes the quotes that are used in the iframe, the doc inside and in script
+        iframe_match = re.search(r'(<iframe.*?</iframe>)', output, re.DOTALL)
+        iframe_html = iframe_match.group(1) if iframe_match else "No iframe found."
+        iframe_html = html.unescape(iframe_html)
+
+        iframe_html = iframe_html.replace("'",'`')
+        iframe_html = iframe_html.replace(r'\n','\n')
+        iframe_html = iframe_html.replace('srcdoc="',"srcdoc='")
+        iframe_html = iframe_html.replace('</html>\n"',"</html>'")
+
+        # this is the optional debug info, and should be passed and displayed aswell
+        log_lines = [line for line in output.split("\n") if "INFO:" in line or "DEBUG:" in line]
+        logs = "\n".join(log_lines)
         
         if exec_result.exit_code == 0:
-            return {"status": "success", "output": output}
+            return {"status": "success", "output": iframe_html , "logs": logs}
         else:
             return {"status": "error", "message": f"Execution failed: {output}"}
     except docker.errors.NotFound:
