@@ -1,3 +1,5 @@
+import subprocess
+import tempfile
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS #necessary for frontend/backend communication
 import sandbox              #sandbox code 
@@ -23,6 +25,44 @@ def create_session():
             print(f"Created new sandbox for user {session['user_id']}")
             return jsonify({"status": "success", "message": "Succeded in lauching container"}), 200
     return jsonify({"status": "error", "message": "Failed to launch sandbox"}), 400
+
+'''
+Lints the provided code using Ruff
+is called from svelte post request:
+    lintCode function in +page.svelte
+'''
+@app.route('/lint', methods=['POST'])
+def lint_code():
+    code = request.json.get("code")
+    if not code:
+        return jsonify({"error": "No code provided"}), 400
+    try:
+        # Write the code to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
+            temp_file.write(code.encode())
+            temp_file_path = temp_file.name
+
+        # Run Ruff with the temporary file
+        process = subprocess.run(
+            ["ruff", "check", temp_file_path],
+            capture_output=True,
+            text=True
+        )
+
+        # Log the process output and errors
+        print(f"Ruff stdout: {process.stdout}")
+        print(f"Ruff stderr: {process.stderr}")
+
+        # Parse Ruff's output
+        lint_output = process.stdout.strip()
+
+        if process.returncode != 0:
+            return jsonify({"error": process.stdout}), 500
+        return jsonify({"lint": lint_output})
+
+    except Exception as e:
+        print(f"Linting failed: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 '''
 Does arbitrary code execution in user sandbox

@@ -4,15 +4,16 @@
   import { keymap } from "@codemirror/view";
   import { indentWithTab } from "@codemirror/commands"; // Imports tab handling
   import { python } from "@codemirror/lang-python";     // Imports Python syntax highlighting
+  import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
+  
   let code = "";
-
   let specification = 'Calculate probability from start to end';
   let output = "";
   let debug_info = "";
   let error = "";
   let simulationSteps = [];
   let editor;
-
+  let lintErrors = [];
 
   // Save code to local storage
 
@@ -32,13 +33,15 @@
     function createEditor() {
         editor = new EditorView({
             doc: code,
-            // Sets up the editor with Python syntax highlighting and tab handling
-            extensions: [basicSetup, keymap.of([indentWithTab]), python()], 
+            // Sets up the editor with Python syntax highlighting, tab handling and linting
+            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(), linter(lintCode)],
             parent: document.querySelector(".code-editor"),
         });
     }
 
     onMount(() => {
+        // Start the backend server
+        startupBackend();
         // Load code from local storage
         window.addEventListener("beforeunload", saveCode);
         const savedCode = localStorage.getItem("python_code");
@@ -53,7 +56,6 @@
     onDestroy(() => {
         window.removeEventListener("beforeunload", saveCode);
     });
-
 
   async function startupBackend() {
     try {
@@ -77,7 +79,64 @@
     }
   }  
 
-  startupBackend(); //not sure if this is the best way, probably not but ok for now
+  async function lintCode(view) {
+    const code = view.state.doc.toString();
+    try {
+      const response = await fetch('http://localhost:5000/lint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code }),
+        credentials: 'include'
+      });
+
+      const result = await response.json();
+      if(result.lint){
+        console.log("There are no errors: ", result.lint);
+        lintErrors = parseLintErrors(result.lint);
+      }else{
+        console.log("error", result.error);
+        lintErrors = parseLintErrors(result.error);
+      }
+    } catch (e) {
+      lintErrors = [{ from: 0, to: 0, severity: "error", message: "Failed to connect to linting server" }];
+    }
+    return lintErrors;
+  }
+
+  function parseLintErrors(lintOutput) {
+    const errors = [];
+    const lines = lintOutput.split('\n');
+    const regex = /:(\d+):(\d+):\s(\w+)\s(.+)/;
+
+    for (const line of lines) {
+      const match = line.match(regex);
+      if (match) {
+        const [, lineNum, colNum, errorCode, message] = match;
+        const lineNumInt = parseInt(lineNum);
+        const colNumInt = parseInt(colNum);
+        console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
+        const line = editor.state.doc.line(lineNumInt); // Get the line at lineNum
+        const from = line.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
+        const to = from + 1; // TODO: Adjust the ending position based on the length of the error
+
+        errors.push({
+          from,
+          to,
+          severity: mapSeverity(errorCode),
+          message
+        });
+      }
+    }
+    return errors;
+  }
+
+  function mapSeverity(errorCode) {
+    // TODO: Map ruff error codes to codemirror severity levels (error, warning, info)
+    // See: https://docs.astral.sh/ruff/rules/
+    return "error";  
+  }
 
   async function executeCode() {
     const code = editor.state.doc.toString();
@@ -142,6 +201,7 @@
       </div>
       <div class="output-console">
         <pre>{debug_info}</pre>
+        <pre style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
         <pre style="color: red;">{error}</pre>
       </div>
     </div>
