@@ -91,7 +91,7 @@
       const result = await response.json();
       output = result.output;
       debug_info = result.logs;
-      error = result.error;
+      error = result.message;
     } catch (e) {
       error = "Failed to connect to execution server";
     } finally {
