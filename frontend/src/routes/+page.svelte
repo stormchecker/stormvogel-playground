@@ -8,8 +8,8 @@
   
   let code = "";
   let specification = 'Calculate probability from start to end';
-  let output = "";
-  let debug_info = "";
+  let output_html = "";
+  let output_non_html = "";
   let error = "";
   let simulationSteps = [];
   let editor;
@@ -88,8 +88,8 @@
       });
       
       const result = await response.json();
-      output = result.output;
-      debug_info = result.logs;
+      output_html = result.output_html;
+      output_non_html = result.output_non_html;
       error = result.message;
     } catch (e) {
       error = "Failed to connect to execution server";
@@ -163,13 +163,13 @@
 
   function checkSpecification() {
     // Placeholder for actual specification checking
-    output = "Specification analysis would go here";
+    // output = "Specification analysis would go here";
   }
 
   function simulate() {
     // Mock simulation
     simulationSteps = ['start', 'active', 'end'];
-    output = `Simulation path: ${simulationSteps.join(' → ')}`;
+    // output = `Simulation path: ${simulationSteps.join(' → ')}`;
   }
 </script>
 
@@ -207,19 +207,12 @@
 
     <div class="visualization-panel">
       <div class="model-preview">
-        <div class="state-diagram">
-          <div class="state start">Start</div>
-          <div class="state active">Active</div>
-          <div class="state end">End</div>
-          <div class="transition start-active">0.8</div>
-          <div class="transition start-end">0.2</div>
-          <div class="transition active-end">1.0</div>
-        </div>
+        {@html output_html}
       </div>
       <div class="output-console">
-        <pre>{output}</pre>
-        <pre style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
+        <pre>{output_non_html}</pre>
         <pre style="color: red;">{error}</pre>
+        <pre style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
       </div>
     </div>
   </div>
@@ -371,34 +364,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
   }
-
-  .state-diagram {
-    position: relative;
-    height: 100%;
-  }
-
-  .state {
-    position: absolute;
-    padding: 1rem;
-    background: #007acc;
-    border-radius: 8px;
-    text-align: center;
-    color: #fff;
-  }
-
-  .start { top: 20%; left: 10%; }
-  .active { top: 50%; left: 40%; }
-  .end { top: 20%; left: 70%; }
-
-  .transition {
-    position: absolute;
-    color: #00cc88;
-    font-size: 0.8em;
-  }
-
-  .start-active { top: 30%; left: 25%; }
-  .start-end { top: 25%; left: 45%; }
-  .active-end { top: 60%; left: 55%; }
 
   .output-console {
     flex: 1;
