@@ -44,6 +44,7 @@
         
         // Load the editor
         createEditor();
+        startupBackend(); 
     });
 
     onDestroy(() => {
@@ -72,8 +73,6 @@
         console.error('Failed to startup server backend:', e);
     }
   }  
-
-  startupBackend(); //not sure if this is the best way, probably not but ok for now
 
   async function executeCode() {
     isExecuting = true;
@@ -137,9 +136,9 @@
         const lineNumInt = parseInt(lineNum);
         const colNumInt = parseInt(colNum);
         console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
-        const line = editor.state.doc.line(lineNumInt); // Get the line at lineNum
-        const from = line.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
-        const to = line.to; // Mark till the end of the line
+        const editorLine = editor.state.doc.line(lineNumInt); // Get the line at lineNum
+        const from = editorLine.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
+        const to = editorLine.to; // Mark till the end of the line
 
         errors.push({
           from,
