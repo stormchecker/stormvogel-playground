@@ -14,15 +14,10 @@
   let simulationSteps = [];
   let editor;
   let lintErrors = [];
+  let isExecuting = false;
+
 
   // Save code to local storage
-
-    function htmlDecode(input) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(input, "text/html");
-      return doc.documentElement.textContent;
-    }
-
     function saveCode() {
         const code = editor.state.doc.toString(); // Get the code from the editor
         localStorage.setItem("python_code",code); // Save for a number of days
@@ -40,8 +35,6 @@
     }
 
     onMount(() => {
-        // Start the backend server
-        startupBackend();
         // Load code from local storage
         window.addEventListener("beforeunload", saveCode);
         const savedCode = localStorage.getItem("python_code");
@@ -56,6 +49,7 @@
     onDestroy(() => {
         window.removeEventListener("beforeunload", saveCode);
     });
+
 
   async function startupBackend() {
     try {
@@ -78,6 +72,32 @@
         console.error('Failed to startup server backend:', e);
     }
   }  
+
+  startupBackend(); //not sure if this is the best way, probably not but ok for now
+
+  async function executeCode() {
+    isExecuting = true;
+    const code = editor.state.doc.toString();
+    try {
+      const response = await fetch('http://localhost:5000/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code }), 
+        credentials: 'include'
+      });
+      
+      const result = await response.json();
+      output = result.output;
+      debug_info = result.logs;
+      error = result.error;
+    } catch (e) {
+      error = "Failed to connect to execution server";
+    } finally {
+      isExecuting = false;
+    }
+  }
 
   async function lintCode(view) {
     const code = view.state.doc.toString();
@@ -119,7 +139,7 @@
         console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
         const line = editor.state.doc.line(lineNumInt); // Get the line at lineNum
         const from = line.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
-        const to = from + 1; // TODO: Adjust the ending position based on the length of the error
+        const to = line.to; // Mark till the end of the line
 
         errors.push({
           from,
@@ -133,29 +153,12 @@
   }
 
   function mapSeverity(errorCode) {
-    // TODO: Map ruff error codes to codemirror severity levels (error, warning, info)
-    // See: https://docs.astral.sh/ruff/rules/
-    return "error";  
-  }
-
-  async function executeCode() {
-    const code = editor.state.doc.toString();
-    try {
-      const response = await fetch('http://localhost:5000/execute', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ code }), 
-        credentials: 'include'
-      });
-      
-      const result = await response.json();
-      output = result.output;
-      debug_info = result.logs;
-      error = result.error;
-    } catch (e) {
-      error = "Failed to connect to execution server";
+    if (errorCode.startsWith('E')) {
+      return "error";
+    } else if (errorCode.startsWith('W')) {
+      return "warning";
+    } else {
+      return "info";
     }
   }
 
@@ -188,7 +191,15 @@
     <div class="code-panel">
       <div class="editor-header">
         <span class="file-tab active">model.py</span>
-        <button on:click={executeCode} class="nav-btn">Execute</button>
+        <button on:click={executeCode} class="nav-btn" disabled={isExecuting}>
+          <span class="button-content">
+            {#if isExecuting}
+              <img src="/progress.svg" alt="Executing..." class="progress-icon" />
+            {:else}
+              Execute
+            {/if}
+          </span>
+        </button>
       </div>
       <div class="code-editor"
         placeholder="Enter your Python code here..."
@@ -197,7 +208,14 @@
 
     <div class="visualization-panel">
       <div class="model-preview">
-        {@html output}
+        <div class="state-diagram">
+          <div class="state start">Start</div>
+          <div class="state active">Active</div>
+          <div class="state end">End</div>
+          <div class="transition start-active">0.8</div>
+          <div class="transition start-end">0.2</div>
+          <div class="transition active-end">1.0</div>
+        </div>
       </div>
       <div class="output-console">
         <pre>{debug_info}</pre>
@@ -265,10 +283,25 @@
     cursor: pointer;
     border-radius: 4px;
     transition: background 0.3s;
+    display: flex;
+    align-items: center;
   }
 
   .nav-btn:hover {
     background: #d0e0ff;
+  }
+
+  .button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px; /* Set a fixed width to ensure consistent size */
+    height: 15px; /* Set a fixed height to ensure consistent size */
+  }
+
+  .progress-icon {
+    width: 30px;
+    height: 30px;
   }
 
   .main-content {
