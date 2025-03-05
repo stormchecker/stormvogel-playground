@@ -32,6 +32,26 @@ def start_sandbox(user_id):
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
     return container
 
+def separate_output(output):
+
+    # this part is very ugly, but it basically changes the quotes that are used in the iframe, the doc inside and in script
+    lines = output.split("\n")
+    filtered_lines = [line for line in lines if "HTML" not in line]
+    non_html_output = "\n".join(filtered_lines)
+
+    iframe_match = re.search(r'(<iframe.*?</iframe>)', output, re.DOTALL)
+    iframe_html = iframe_match.group(1) if iframe_match else "No iframe found."
+    iframe_html = html.unescape(iframe_html)
+
+    iframe_html = iframe_html.replace("'",'`')
+    iframe_html = iframe_html.replace(r'\n','\n')
+    iframe_html = iframe_html.replace('srcdoc="',"srcdoc='")
+    iframe_html = iframe_html.replace('</html>\n"',"</html>'")
+    
+    return iframe_html, non_html_output
+
+
+
 def execute_code(user_id, code):
     container_name = f"sandbox_{user_id}"
     
@@ -58,22 +78,11 @@ def execute_code(user_id, code):
 
         # separate output from debug information
 
-        # this part is very ugly, but it basically changes the quotes that are used in the iframe, the doc inside and in script
-        iframe_match = re.search(r'(<iframe.*?</iframe>)', output, re.DOTALL)
-        iframe_html = iframe_match.group(1) if iframe_match else "No iframe found."
-        iframe_html = html.unescape(iframe_html)
+        iframe_html, logs = separate_output(output)
 
-        iframe_html = iframe_html.replace("'",'`')
-        iframe_html = iframe_html.replace(r'\n','\n')
-        iframe_html = iframe_html.replace('srcdoc="',"srcdoc='")
-        iframe_html = iframe_html.replace('</html>\n"',"</html>'")
-
-        # this is the optional debug info, and should be passed and displayed aswell
-        log_lines = [line for line in output.split("\n") if "INFO:" in line or "DEBUG:" in line]
-        logs = "\n".join(log_lines)
         
         if exec_result.exit_code == 0:
-            return {"status": "success", "output": iframe_html , "logs": logs}
+            return {"status": "success", "output_html": iframe_html , "output_non_html": logs}
         else:
             return {"status": "error", "message": f"Execution failed: {output}"}
     except docker.errors.NotFound:

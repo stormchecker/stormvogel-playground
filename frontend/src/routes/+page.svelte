@@ -7,8 +7,8 @@
   let code = "";
 
   let specification = 'Calculate probability from start to end';
-  let output = "";
-  let debug_info = "";
+  let output_html = "";
+  let output_non_html = "";
   let error = "";
   let simulationSteps = [];
   let editor;
@@ -92,8 +92,8 @@
       });
       
       const result = await response.json();
-      output = result.output;
-      debug_info = result.logs;
+      output_html = result.output_html;
+      output_non_html = result.output_non_html;
       error = result.error;
     } catch (e) {
       error = "Failed to connect to execution server";
@@ -102,13 +102,13 @@
 
   function checkSpecification() {
     // Placeholder for actual specification checking
-    output = "Specification analysis would go here";
+    // output = "Specification analysis would go here";
   }
 
   function simulate() {
     // Mock simulation
     simulationSteps = ['start', 'active', 'end'];
-    output = `Simulation path: ${simulationSteps.join(' → ')}`;
+    // output = `Simulation path: ${simulationSteps.join(' → ')}`;
   }
 </script>
 
@@ -138,10 +138,10 @@
 
     <div class="visualization-panel">
       <div class="model-preview">
-        {@html output}
+        {@html output_html}
       </div>
       <div class="output-console">
-        <pre>{debug_info}</pre>
+        <pre>{output_non_html}</pre>
         <pre style="color: red;">{error}</pre>
       </div>
     </div>
