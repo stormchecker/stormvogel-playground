@@ -4,13 +4,17 @@
   import { keymap } from "@codemirror/view";
   import { indentWithTab } from "@codemirror/commands"; // Imports tab handling
   import { python } from "@codemirror/lang-python";     // Imports Python syntax highlighting
+  import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
+  
   let code = "";
-
   let specification = 'Calculate probability from start to end';
   let output = "";
+  let debug_info = "";
   let error = "";
   let simulationSteps = [];
   let editor;
+  let lintErrors = [];
+  let isExecuting = false;
 
 
   // Save code to local storage
@@ -24,8 +28,8 @@
     function createEditor() {
         editor = new EditorView({
             doc: code,
-            // Sets up the editor with Python syntax highlighting and tab handling
-            extensions: [basicSetup, keymap.of([indentWithTab]), python()], 
+            // Sets up the editor with Python syntax highlighting, tab handling and linting
+            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(), linter(lintCode)],
             parent: document.querySelector(".code-editor"),
         });
     }
@@ -40,6 +44,7 @@
         
         // Load the editor
         createEditor();
+        startupBackend(); 
     });
 
     onDestroy(() => {
@@ -69,9 +74,8 @@
     }
   }  
 
-  startupBackend(); //not sure if this is the best way, probably not but ok for now
-
   async function executeCode() {
+    isExecuting = true;
     const code = editor.state.doc.toString();
     try {
       const response = await fetch('http://localhost:5000/execute', {
@@ -85,9 +89,75 @@
       
       const result = await response.json();
       output = result.output;
-      error = result.error;
+      debug_info = result.logs;
+      error = result.message;
     } catch (e) {
       error = "Failed to connect to execution server";
+    } finally {
+      isExecuting = false;
+    }
+  }
+
+  async function lintCode(view) {
+    const code = view.state.doc.toString();
+    try {
+      const response = await fetch('http://localhost:5000/lint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code }),
+        credentials: 'include'
+      });
+
+      const result = await response.json();
+      if(result.lint){
+        console.log("There are no errors: ", result.lint);
+        lintErrors = parseLintErrors(result.lint);
+      }else{
+        console.log("error", result.error);
+        lintErrors = parseLintErrors(result.error);
+      }
+    } catch (e) {
+      lintErrors = [{ from: 0, to: 0, severity: "error", message: "Failed to connect to linting server" }];
+    }
+    return lintErrors;
+  }
+
+  function parseLintErrors(lintOutput) {
+    const errors = [];
+    const lines = lintOutput.split('\n');
+    const regex = /:(\d+):(\d+):\s(\w+)\s(.+)/;
+
+    for (const line of lines) {
+      const match = line.match(regex);
+      if (match) {
+        const [, lineNum, colNum, errorCode, message] = match;
+        const lineNumInt = parseInt(lineNum);
+        const colNumInt = parseInt(colNum);
+        console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
+        const editorLine = editor.state.doc.line(lineNumInt); // Get the line at lineNum
+        const from = editorLine.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
+        const to = editorLine.to; // Mark till the end of the line
+
+        errors.push({
+          from,
+          to,
+          severity: mapSeverity(errorCode),
+          message
+        });
+      }
+    }
+    return errors;
+  }
+
+  function mapSeverity(errorCode) {
+    if (errorCode.startsWith('E')) {
+      return "error";
+    } else if (errorCode.startsWith('W')) {
+      return "warning";
+    } else {
+      return "info";
     }
   }
 
@@ -120,7 +190,15 @@
     <div class="code-panel">
       <div class="editor-header">
         <span class="file-tab active">model.py</span>
-        <button on:click={executeCode} class="nav-btn">Execute</button>
+        <button on:click={executeCode} class="nav-btn" disabled={isExecuting}>
+          <span class="button-content">
+            {#if isExecuting}
+              <img src="/progress.svg" alt="Executing..." class="progress-icon" />
+            {:else}
+              Execute
+            {/if}
+          </span>
+        </button>
       </div>
       <div class="code-editor"
         placeholder="Enter your Python code here..."
@@ -140,6 +218,7 @@
       </div>
       <div class="output-console">
         <pre>{output}</pre>
+        <pre style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
         <pre style="color: red;">{error}</pre>
       </div>
     </div>
@@ -203,10 +282,25 @@
     cursor: pointer;
     border-radius: 4px;
     transition: background 0.3s;
+    display: flex;
+    align-items: center;
   }
 
   .nav-btn:hover {
     background: #d0e0ff;
+  }
+
+  .button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px; /* Set a fixed width to ensure consistent size */
+    height: 15px; /* Set a fixed height to ensure consistent size */
+  }
+
+  .progress-icon {
+    width: 30px;
+    height: 30px;
   }
 
   .main-content {
