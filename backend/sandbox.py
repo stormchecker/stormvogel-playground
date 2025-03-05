@@ -72,14 +72,12 @@ def execute_code(user_id, code):
         exec_result = container.exec_run("python3 /tmp/script.py", stdout=True, stderr=True)
         output = exec_result.output.decode()
         logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
-
+        
         # Clean up
         container.exec_run("rm /tmp/script.py")
 
         # separate output from debug information
-
         iframe_html, logs = separate_output(output)
-
         
         if exec_result.exit_code == 0:
             return {"status": "success", "output_html": iframe_html , "output_non_html": logs}
