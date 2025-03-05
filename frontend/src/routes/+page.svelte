@@ -36,7 +36,10 @@
 
     onMount(() => {
         // Load code from local storage
-        window.addEventListener("beforeunload", saveCode);
+        window.addEventListener("beforeunload", function () {
+            saveCode();
+            stopExecution();
+        });
         const savedCode = localStorage.getItem("python_code");
         if (savedCode) {
             code = savedCode;
@@ -48,7 +51,10 @@
     });
 
     onDestroy(() => {
-        window.removeEventListener("beforeunload", saveCode);
+        window.removeEventListener("beforeunload", function () {
+            saveCode();
+            stopExecution();
+        });
     });
 
 
@@ -96,6 +102,23 @@
     } finally {
       isExecuting = false;
     }
+  }
+
+  async function stopExecution() {
+      try {
+          const response = await fetch('http://localhost:5000/stop', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              credentials: 'include'
+          });
+
+          const result = await response.json();
+          return result.message; // Assuming the server returns a message
+      } catch (e) {
+          return "Failed to connect to execution server";
+      }
   }
 
   async function lintCode(view) {

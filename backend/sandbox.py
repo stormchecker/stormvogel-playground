@@ -94,7 +94,7 @@ def stop_sandbox(user_id):
     container_name = f"sandbox_{user_id}"
     try:
         container = client.containers.get(container_name)
-        container.stop()
+        container.stop(timeout=1)
         container.remove()
         logger.info(f"Sandbox {container_name} stopped and removed.")
         return True
