@@ -218,7 +218,7 @@
         </div>
       </div>
       <div class="output-console">
-        <pre>{debug_info}</pre>
+        <pre>{output}</pre>
         <pre style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
         <pre style="color: red;">{error}</pre>
       </div>
