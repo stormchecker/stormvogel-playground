@@ -5,6 +5,7 @@
   import { indentWithTab } from "@codemirror/commands"; // Imports tab handling
   import { python } from "@codemirror/lang-python";     // Imports Python syntax highlighting
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
+  import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
   
   let code = "";
   let specification = 'Calculate probability from start to end';
@@ -15,13 +16,29 @@
   let editor;
   let lintErrors = [];
   let isExecuting = false;
+  let saveStatus = 'idle'; // Variable for checking the save status
+  let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
+
 
 
   // Save code to local storage
     function saveCode() {
         const code = editor.state.doc.toString(); // Get the code from the editor
-        localStorage.setItem("python_code",code); // Save for a number of days
-        alert("Code saved!"); //TODO :change this to a nice saved button change or display it in another way
+
+        try { // Try to save the code
+          localStorage.setItem("python_code",code); // Save for a number of days
+          saveStatus = 'saved';
+          saveToast = true;
+          setTimeout(() => { // After 2 seconds set saveStatus back to default
+            saveStatus = 'idle'
+          }, 2000);
+          setTimeout(() => { // After 3 seconds set saveToast to false so it fades away
+            saveToast = false
+          }, 3000);
+        } catch (error) { // If there are errors while saving, output it to the console
+          console.error("Failed to save code: ", error);
+          alert("Error, unable to save code.");
+      }
     }
 
     // Adds code editor with syntax highlighting
@@ -205,7 +222,11 @@
     <h1>Model Playground</h1>
     <nav>
       <button class="nav-btn">Examples</button>
-      <button class="nav-btn" on:click={saveCode}>Save</button>
+      <button on:click={saveCode}
+        style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
+        class="nav-btn">
+        {saveStatus === 'saved' ? 'Saved' : 'Save'}
+      </button>
     </nav>
   </header>
 
@@ -252,6 +273,13 @@
       <button on:click={simulate} class="action-btn">Simulate</button>
     </div>
   </div>
+
+  {#if saveToast}
+    <div class="save-toast" transition:fade>
+      The code has been saved successfully
+    </div>
+  {/if}
+
 </div>
 
 <style>
@@ -427,5 +455,17 @@
 
   .action-btn:hover {
     background: #005fa3;
+  }
+
+  .save-toast {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #24add6;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    opacity: 0.9;
   }
 </style>
