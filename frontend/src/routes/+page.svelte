@@ -276,7 +276,7 @@
 
   {#if saveToast}
     <div class="save-toast" transition:fade>
-      The code has been saved succesfully
+      The code has been saved successfully
     </div>
   {/if}
 
