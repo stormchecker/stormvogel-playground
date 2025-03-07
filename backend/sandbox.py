@@ -34,7 +34,7 @@ def start_sandbox(user_id):
 
 def separate_output(output):
 
-    # this part is very ugly, but it basically changes the quotes that are used in the iframe, the doc inside and in script
+    # This part is very ugly, but it basically changes the quotes that are used in the iframe, the doc inside and in script
     lines = output.split("\n")
     filtered_lines = [line for line in lines if "HTML" not in line]
     non_html_output = "\n".join(filtered_lines)
@@ -76,7 +76,7 @@ def execute_code(user_id, code):
         # Clean up
         container.exec_run("rm /tmp/script.py")
 
-        # separate output from debug information
+        # Separate output from debug information
         iframe_html, logs = separate_output(output)
         
         if exec_result.exit_code == 0:
