@@ -1,9 +1,9 @@
 import subprocess
 import tempfile
 from flask import Flask, request, jsonify, session
-from flask_cors import CORS #necessary for frontend/backend communication
-import sandbox              #sandbox code 
-import uuid                 #for unique session keys
+from flask_cors import CORS # Necessary for frontend/backend communication
+import sandbox              # Sandbox code 
+import uuid                 # For unique session keys
 import os 
 
 app = Flask(__name__)
@@ -42,14 +42,14 @@ def lint_code():
             temp_file.write(code.encode())
             temp_file_path = temp_file.name
 
-        # Run Ruff with the temporary file
+        # Run Ruff with the temp file
         process = subprocess.run(
             ["ruff", "check", temp_file_path],
             capture_output=True,
             text=True
         )
 
-        # Log the process output and errors
+        # Log output and errors
         print(f"Ruff stdout: {process.stdout}")
         print(f"Ruff stderr: {process.stderr}")
 
@@ -73,7 +73,7 @@ is called fron svelte post request:
 '''
 @app.route('/execute', methods=['POST'])
 def execute_code():
-    #svelte doesn't sent {"code" : "<python code>"} but {"<python code>"}, but doesn't matter.
+    # Svelte doesn't sent {"code" : "<python code>"} but {"<python code>"}, but doesn't matter.
     data = request.json
     code = data.get('code', '')
 
@@ -97,7 +97,7 @@ def stop_sandbox():
         return jsonify({"status": "success", "message": "Sandbox stopped"})
     return jsonify({"status": "error", "message": "No active session"}), 400
 
-#call python3 app.py --debug for dev backend
-#problems with passing arguments in my current setup, so hardcoded debug mode :|
+# Call python3 app.py --debug for dev backend
+# Problems with passing arguments in my current setup, so hardcoded debug mode :|
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
