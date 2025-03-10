@@ -50,8 +50,6 @@ def separate_output(output):
     iframe_html = iframe_html.replace('srcdoc="',"srcdoc='")
     iframe_html = iframe_html.replace('</html>\n"',"</html>'")
 
-    if "sandbox" not in iframe_html:
-        iframe_html = re.sub(r'(<iframe[^>]*)(>)', r'\1 sandbox\2', iframe_html, count=1)
 
     return iframe_html, non_html_output
 
@@ -79,10 +77,21 @@ def execute_code(user_id, code):
     
     try:
         container = client.containers.get(container_name)
+
+        exec_results = container.exec_run("pgrep -fa python")
+        exec_output = exec_results.output.decode()
+
+        logger.debug(f"These processes are executing in container: {exec_output}")
+        while "script.py" in exec_output:
+            logger.debug(f"Different Python file running in container{exec_output}")
+            exec_results = container.exec_run("pgrep -fa python")
+            exec_output = exec_results.output.decode()
+
+
         logger.debug(f"Executing code for {user_id}: {repr(code)}")
         
         # Use a heredoc to write the code, ensuring proper termination
-        write_cmd, w = write_to_file(code,container)
+        write_cmd = write_to_file(code,container)
 
         logger.debug(f"Write command: {write_cmd}")
         

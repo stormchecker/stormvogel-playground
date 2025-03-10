@@ -249,7 +249,7 @@
 
     <div class="visualization-panel">
       <div class="model-preview">
-        <iframe id="sandboxFrame" title="sandboxed_iframe" sandbox="allow-scripts allow-same-origin" style="width:100%; height:100%; border:none;"
+        <iframe id="sandboxFrame" title="sandboxed_iframe" sandbox="allow-scripts" style="width:100%; height:100%; border:none;"
                 srcdoc='<!DOCTYPE html>
                   <html lang="en">
                   <head>
