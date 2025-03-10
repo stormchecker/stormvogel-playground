@@ -19,8 +19,6 @@
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
 
-
-
   // Save code to local storage
     function saveCode() {
         const code = editor.state.doc.toString(); // Get the code from the editor
@@ -251,7 +249,21 @@
 
     <div class="visualization-panel">
       <div class="model-preview">
-        {@html output_html}
+        <iframe id="sandboxFrame" title="sandboxed_iframe" sandbox="allow-scripts allow-same-origin" style="width:100%; height:100%; border:none;"
+                srcdoc='<!DOCTYPE html>
+                  <html lang="en">
+                  <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Preview</title>
+                  </head>
+                  <body>
+                    <div class="model-preview">
+                      {output_html} <!-- Injecting your output HTML -->
+                    </div>
+                  </body>
+                  </html>'>
+        </iframe>
       </div>
       <div class="output-console">
         <pre>{output_non_html}</pre>

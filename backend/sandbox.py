@@ -65,10 +65,13 @@ def write_to_file(code,container):
 
     # Seek to the beginning of the stream
     tarstream.seek(0)
-    print(tarstream)
-    container.put_archive("/", tarstream)
+    logger.debug(f"file{tarstream}")
+    if container.put_archive("/", tarstream):
+        logger.debug("File transfer success")
+    else:
+        logger.debug("File transfer failure")
 
-    return "/script.py"
+    return "/script.py" 
 
 
 def execute_code(user_id, code):
@@ -79,22 +82,15 @@ def execute_code(user_id, code):
         logger.debug(f"Executing code for {user_id}: {repr(code)}")
         
         # Use a heredoc to write the code, ensuring proper termination
-        write_cmd = write_to_file(code,container)
+        write_cmd, w = write_to_file(code,container)
 
         logger.debug(f"Write command: {write_cmd}")
-        # write_result = container.exec_run(["python3", write_cmd], stdout=True, stderr=True)
-        # write_output = write_result.output.decode()
-        # logger.debug(f"Write result: exit_code={write_result.exit_code}, output={write_output}")
-        # if write_result.exit_code != 0:
-        #     return {"status": "error", "message": f"Failed to write code: {write_output}"}
         
         # Execute the script
         exec_result = container.exec_run(["python3", write_cmd], stdout=True, stderr=True)
         output = exec_result.output.decode()
         logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
         
-        # Clean up
-        container.exec_run("rm /script.py")
 
         # Separate output from debug information
         iframe_html, logs = separate_output(output)
