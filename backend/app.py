@@ -5,10 +5,12 @@ from flask_cors import CORS # Necessary for frontend/backend communication
 import sandbox              # Sandbox code 
 import uuid                 # For unique session keys
 import os 
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 
 '''
 Creates session and starts sandbox for user

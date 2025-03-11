@@ -28,10 +28,11 @@ project-root/
 1. install docker: deamon and cli (or docker-desktop:))
     (TODO: further details)
 
-2. Install flask:
+2. Install flask and library for .env:
     ```bash
     pip install flask
     pip install flask_cors
+    pip install python-dotenv
     ```
 
 3. Install python docker api:
