@@ -77,6 +77,7 @@ def execute_code(user_id, code):
     
     try:
         container = client.containers.get(container_name)
+        container.restart(timeout=0)
 
         exec_results = container.exec_run("pgrep -fa python")
         exec_output = exec_results.output.decode()
