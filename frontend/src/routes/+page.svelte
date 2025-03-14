@@ -153,7 +153,7 @@
         console.log("There are no errors: ", result.lint);
         lintErrors = parseLintErrors(result.lint);
       }else{
-        console.log("error", result.error);
+        console.log("Error:", result.error);
         lintErrors = parseLintErrors(result.error);
       }
     } catch (e) {
@@ -165,10 +165,19 @@
   function parseLintErrors(lintOutput) {
     const errors = [];
     const lines = lintOutput.split('\n');
+    // Parses the output of the linter example: 
+    // /script.py:16:1: E402 Module level import not at top of file
     const regex = /:(\d+):(\d+):\s(\w+)\s(.+)/;
 
+    // Parses the output of the linter for syntax errors, example:
+    // script.py:19:44: SyntaxError: Simple statements must be separated by newlines or semicolons
+    const syntaxErrorRegex = /:(\d+):(\d+):\s(SyntaxError):\s(.+)/;
+
     for (const line of lines) {
-      const match = line.match(regex);
+      let match = line.match(regex);
+      if (!match) {
+        match = line.match(syntaxErrorRegex);
+      }
       if (match) {
         const [, lineNum, colNum, errorCode, message] = match;
         const lineNumInt = parseInt(lineNum);
@@ -190,7 +199,7 @@
   }
 
   function mapSeverity(errorCode) {
-    if (errorCode.startsWith('E')) {
+    if (errorCode.startsWith('E') || errorCode.startsWith('SyntaxError')) {
       return "error";
     } else if (errorCode.startsWith('W')) {
       return "warning";

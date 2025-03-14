@@ -38,29 +38,17 @@ def lint_code():
     code = request.json.get("code")
     if not code:
         return jsonify({"error": "No code provided"}), 400
+
+    if "user_id" not in session:
+        return jsonify({"status": "error", "message": "No active session"}), 400
+
     try:
-        # Write the code to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
-            temp_file.write(code.encode())
-            temp_file_path = temp_file.name
-
-        # Run Ruff with the temp file
-        process = subprocess.run(
-            ["ruff", "check", temp_file_path],
-            capture_output=True,
-            text=True
-        )
-
-        # Log output and errors
-        print(f"Ruff stdout: {process.stdout}")
-        print(f"Ruff stderr: {process.stderr}")
-
-        # Parse Ruff's output
-        lint_output = process.stdout.strip()
-
-        if process.returncode != 0:
-            return jsonify({"error": process.stdout}), 500
-        return jsonify({"lint": lint_output})
+        # Use the sandbox container to lint the code
+        result = sandbox.lint_code(session["user_id"], code)
+        if result["status"] == "success":
+            return jsonify({"lint": result["lint_output"]})
+        else:
+            return jsonify({"error": result["message"]})
 
     except Exception as e:
         print(f"Linting failed: {str(e)}")
