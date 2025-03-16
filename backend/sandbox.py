@@ -116,6 +116,36 @@ def execute_code(user_id, code):
         logger.error(f"Execution failed: {str(e)}")
         return {"status": "error", "message": f"Execution failed: {str(e)}"}
 
+def lint_code(user_id, code):
+    container_name = f"sandbox_{user_id}"
+    
+    try:
+        container = client.containers.get(container_name)
+        container.restart(timeout=0)
+
+        logger.debug(f"Linting code for {user_id}: {repr(code)}")
+        
+        # Use a heredoc to write the code, ensuring proper termination
+        write_cmd = write_to_file(code, container)
+
+        logger.debug(f"Write command: {write_cmd}")
+        
+        # Run Ruff with the temp file inside the container, ensuring it only checks the code
+        exec_result = container.exec_run(["ruff", "check", "--no-fix", write_cmd], stdout=True, stderr=True)
+        output = exec_result.output.decode()
+        logger.debug(f"Linting output: exit_code={exec_result.exit_code}, output={output}")
+
+        if exec_result.exit_code == 0:
+            return {"status": "success", "lint_output": output.strip()}
+        else:
+            return {"status": "error", "message": output}
+    except docker.errors.NotFound:
+        logger.error(f"Container {container_name} not found")
+        return {"status": "error", "message": "Container not found"}
+    except Exception as e:
+        logger.error(f"Linting failed: {str(e)}")
+        return {"status": "error", "message": f"Linting failed: {str(e)}"}
+
 def stop_sandbox(user_id):
     container_name = f"sandbox_{user_id}"
     try:
