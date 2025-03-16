@@ -25,8 +25,9 @@ project-root/
 ## 🚀 Setup Instructions
 
 ### **Backend Setup (Flask)**
-1. install docker: deamon and cli (or docker-desktop:))
-    (TODO: further details)
+1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
+   also install Gvisor: https://gvisor.dev/docs/user_guide/install/
+
 
 2. Install flask and library for .env:
     ```bash
