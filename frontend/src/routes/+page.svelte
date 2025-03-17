@@ -6,7 +6,8 @@
   import { python } from "@codemirror/lang-python";     // Imports Python syntax highlighting
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
-  
+  import { parseLintErrors } from '../utils';
+
   let code = "";
   let specification = 'Calculate probability from start to end';
   let output_html = "";
@@ -22,7 +23,6 @@
   // Save code to local storage
     function saveCode() {
         const code = editor.state.doc.toString(); // Get the code from the editor
-
         try { // Try to save the code
           localStorage.setItem("python_code",code); // Save for a number of days
           saveStatus = 'saved';
@@ -151,61 +151,15 @@
       const result = await response.json();
       if(result.lint){
         console.log("There are no errors: ", result.lint);
-        lintErrors = parseLintErrors(result.lint);
+        lintErrors = parseLintErrors(result.lint, editor.state.doc);
       }else{
-        console.log("Error:", result.error);
-        lintErrors = parseLintErrors(result.error);
+        console.log("error", result.error);
+        lintErrors = parseLintErrors(result.error, editor.state.doc);
       }
     } catch (e) {
       lintErrors = [{ from: 0, to: 0, severity: "error", message: "Failed to connect to linting server" }];
     }
     return lintErrors;
-  }
-
-  function parseLintErrors(lintOutput) {
-    const errors = [];
-    const lines = lintOutput.split('\n');
-    // Parses the output of the linter example: 
-    // /script.py:16:1: E402 Module level import not at top of file
-    const regex = /:(\d+):(\d+):\s(\w+)\s(.+)/;
-
-    // Parses the output of the linter for syntax errors, example:
-    // script.py:19:44: SyntaxError: Simple statements must be separated by newlines or semicolons
-    const syntaxErrorRegex = /:(\d+):(\d+):\s(SyntaxError):\s(.+)/;
-
-    for (const line of lines) {
-      let match = line.match(regex);
-      if (!match) {
-        match = line.match(syntaxErrorRegex);
-      }
-      if (match) {
-        const [, lineNum, colNum, errorCode, message] = match;
-        const lineNumInt = parseInt(lineNum);
-        const colNumInt = parseInt(colNum);
-        console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
-        const editorLine = editor.state.doc.line(lineNumInt); // Get the line at lineNum
-        const from = editorLine.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
-        const to = editorLine.to; // Mark till the end of the line
-
-        errors.push({
-          from,
-          to,
-          severity: mapSeverity(errorCode),
-          message
-        });
-      }
-    }
-    return errors;
-  }
-
-  function mapSeverity(errorCode) {
-    if (errorCode.startsWith('E') || errorCode.startsWith('SyntaxError')) {
-      return "error";
-    } else if (errorCode.startsWith('W')) {
-      return "warning";
-    } else {
-      return "info";
-    }
   }
 
   function checkSpecification() {
