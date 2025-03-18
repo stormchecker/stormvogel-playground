@@ -229,9 +229,9 @@
         </iframe>
       </div>
       <div class="output-console">
-        <pre>{output_non_html}</pre>
-        <pre style="color: red;">{error}</pre>
-        <pre style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
+        <pre id="output-non-html">{output_non_html}</pre>
+        <pre id="error" style="color: red;">{error}</pre>
+        <pre id="lint-errors" style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
       </div>
     </div>
   </div>

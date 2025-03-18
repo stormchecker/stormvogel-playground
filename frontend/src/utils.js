@@ -12,32 +12,38 @@ export function mapSeverity(errorCode) {
   }
 
 // Parses the lint output and extracts the line number, column number, error code, and message
-export function parseLintErrors(lintOutput, editorState) {
-    const errors = [];
-    const lines = lintOutput.split('\n');
-    const regex = /:(\d+):(\d+):\s(\w+)\s(.+)/;
+export function parseLintErrors(lintOutput, doc) {
+  const errors = [];
+  const lines = lintOutput.split('\n');
+  // Parses the output of the linter example: 
+  // /script.py:16:1: E402 Module level import not at top of file
+  const regex = /:(\d+):(\d+):\s(\w+)\s(.+)/;
 
-    // Extracts the line and column number, error code, and message from the lint output
-    // Based on the format of the lint output
-    // Example: /tmp/script.py:12:1: F821 Undefined name `jj`
-    for (const line of lines) {
-      const match = line.match(regex);
-      if (match) {
-        const [, lineNum, colNum, errorCode, message] = match;
-        const lineNumInt = parseInt(lineNum);
-        const colNumInt = parseInt(colNum);
-        console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
-        const editorLine = editorState.line(lineNumInt); // Get the line at lineNum
-        const from = editorLine.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
-        const to = editorLine.to; // Mark till the end of the line
+  // Parses the output of the linter for syntax errors, example:
+  // script.py:19:44: SyntaxError: Simple statements must be separated by newlines or semicolons
+  const syntaxErrorRegex = /:(\d+):(\d+):\s(SyntaxError):\s(.+)/;
 
-        errors.push({
-          from,
-          to,
-          severity: mapSeverity(errorCode),
-          message
-        });
-      }
+  for (const line of lines) {
+    let match = line.match(regex);
+    if (!match) {
+      match = line.match(syntaxErrorRegex);
     }
-    return errors;
+    if (match) {
+      const [, lineNum, colNum, errorCode, message] = match;
+      const lineNumInt = parseInt(lineNum);
+      const colNumInt = parseInt(colNum);
+      console.log(`Line: ${lineNumInt}, Column: ${colNumInt}, Error Code: ${errorCode}, Message: ${message}`);
+      const editorLine = doc.line(lineNumInt); // Get the line at lineNum
+      const from = editorLine.from + colNumInt - 1; // Adjust the starting position by subtracting 1 for zero-indexing
+      const to = editorLine.to; // Mark till the end of the line
+
+      errors.push({
+        from,
+        to,
+        severity: mapSeverity(errorCode),
+        message
+      });
+    }
   }
+  return errors;
+}
