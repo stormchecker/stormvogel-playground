@@ -71,6 +71,15 @@ To just test the frontend:
 npm test
 ```
 
+To run end-to-end tests run playwright:
+```bash
+npm run playwright
+```
+You can also run the tests in ui mode:
+```sh
+npm run playwright:ui
+```
+
 ---
 
 ## 🤝 Collaboration Guidelines
