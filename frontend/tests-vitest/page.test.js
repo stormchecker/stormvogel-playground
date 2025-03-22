@@ -24,6 +24,29 @@ beforeAll(() => {
 
 beforeEach(() => {
   localStorage.clear(); // Clear local storage before each test
+
+  // Mock the fetch function
+  vi.stubGlobal('fetch', vi.fn((url) => {
+    if (url.endsWith('/startup')) {
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          status: 'success',
+          message: 'Succeeded in lauching container'
+        }),
+      });
+    } else if (url.endsWith('/lint')) {
+      return Promise.resolve({
+        json: () => Promise.resolve({
+          error: '/script.py:1:1: E001 Example error message'
+        }),
+      });
+    }
+    return Promise.reject(new Error('Unknown URL'));
+  }));
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('Page Component', () => {
@@ -113,9 +136,22 @@ describe('Page Component', () => {
     // Restore original fetch after test
     vi.restoreAllMocks();
   });
+
+  test('lints code and displays errors', async () => {
+    render(Page);
+    // Simulate entering code in the CodeMirror editor
+    const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
+    
+    // Trigger linting by pasting code
+    fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
+    
+    const lintErrorsElement = await screen.findByText('Example error message (line 1, col 1)');
+    expect(lintErrorsElement).toBeInTheDocument();
+  });
   
   test('mapSeverity function', () => {
     // Todo: improve the mapping based on the rules https://docs.astral.sh/ruff/rules/
+    expect(mapSeverity('E402')).toBe('warning');
     expect(mapSeverity('E001')).toBe('error');
     expect(mapSeverity('W001')).toBe('warning');
     expect(mapSeverity('I001')).toBe('info');

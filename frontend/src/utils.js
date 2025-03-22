@@ -1,15 +1,17 @@
 // Moved functions here so that they can also be imported in the test file
 
 // Maps Ruff rules to corresponding error codes
-export function mapSeverity(errorCode) {
-    if (errorCode.startsWith('E')) {
-      return "error";
-    } else if (errorCode.startsWith('W')) {
-      return "warning";
-    } else {
-      return "info";
-    }
+export   function mapSeverity(errorCode) {
+  if (errorCode == "E402")
+    return "warning";
+  else if (errorCode.startsWith('E') || errorCode.startsWith('SyntaxError')) {
+    return "error";
+  } else if (errorCode.startsWith('W')) {
+    return "warning";
+  } else {
+    return "info";
   }
+}
 
 // Parses the lint output and extracts the line number, column number, error code, and message
 export function parseLintErrors(lintOutput, doc) {
