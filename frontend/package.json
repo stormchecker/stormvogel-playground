@@ -1,0 +1,25 @@
+{
+  "name": "stormvogelfrontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/svelte": "^5.2.7",
+    "@types/jest": "^29.5.14",
+    "svelte": "^5.20.2",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  },
+  "dependencies": {
+    "@codemirror/lang-python": "^6.1.7",
+    "codemirror": "^6.0.1"
+  }
+}

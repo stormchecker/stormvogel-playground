@@ -25,15 +25,44 @@ project-root/
 ## 🚀 Setup Instructions
 
 ### **Backend Setup (Flask)**
-1. Install flask:
-   ```bash
-   pip install flask
-   ```
+1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
+   also install Gvisor: https://gvisor.dev/docs/user_guide/install/
+
+
+2. Install flask and library for .env:
+    ```bash
+    pip install flask
+    pip install flask_cors
+    pip install python-dotenv
+    ```
+
+3. Install python docker api:
+    ```bash
+    pip install docker
+    ```
 
 ### **Frontend Setup (Svelte)**
-1. (TODO!) 
+1. Install flask:
+   ```bash
+    npm install <in-frontend-folder> 
+    npm run dev
+    ```
+
+### **Running backend (Flask)**
+1. in backend folder:
+    ```bash
+    sudo python3 app.py
+    ```
+
+### **Running backend (Flask)**
+1. in frontend folder:
+    ```bash
+    npm run (build/dev)
+    ```
 
 ---
+
+### **
 
 ## 🤝 Collaboration Guidelines
 

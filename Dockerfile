@@ -64,6 +64,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN pip install setuptools
 
+# Add ruff linting to the virtual environment
+RUN pip install ruff
+
 # Build pycarl
 ##############
 WORKDIR /opt/
