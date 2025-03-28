@@ -39,6 +39,19 @@
       }
     }
 
+    function exportCode() {
+      const code = editor.state.doc.toString(); // Get the code from the editor
+      
+      const blob = new Blob([code], { type: "text/plain "}); // Create a Blob object with the code
+      const a = document.createElement("a"); // Create a link element
+      a.href = URL.createObjectURL(blob); // Set the URL pointing to Blob
+      a.download = "stormvogel_playground.py" // Set the default filename
+
+      document.body.appendChild(a); // Add the link element to the DOM
+      a.click() // 'Click' the download link
+      document.body.removeChild(a); // After the download has been initiated remove the link element
+    }
+
     // Adds code editor with syntax highlighting
     function createEditor() {
         editor = new EditorView({
@@ -233,6 +246,10 @@
         style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
         class="nav-btn">
         {saveStatus === 'saved' ? 'Saved' : 'Save'}
+      </button>
+      <button on:click={exportCode}
+        class="nav-btn">
+        Export
       </button>
     </nav>
   </header>
