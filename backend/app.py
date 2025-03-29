@@ -23,9 +23,9 @@ def create_session():
 
     if "user_id" not in session:
         session["user_id"] = str(uuid.uuid4())
-        if sandbox.start_sandbox(session["user_id"]):
-            print(f"Created new sandbox for user {session['user_id']}")
-            return jsonify({"status": "success", "message": "Succeded in lauching container"}), 200
+    if sandbox.start_sandbox(session["user_id"]):
+        print(f"Created new sandbox for user {session['user_id']}")
+        return jsonify({"status": "success", "message": "Succeded in lauching container"}), 200
     return jsonify({"status": "error", "message": "Failed to launch sandbox"}), 400
 
 '''
