@@ -57,7 +57,7 @@
         editor = new EditorView({
             doc: code,
             // Sets up the editor with Python syntax highlighting, tab handling and linting
-            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter()],
+            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
             parent: document.querySelector(".code-editor"),
         });
     }
