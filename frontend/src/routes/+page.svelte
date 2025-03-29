@@ -39,12 +39,25 @@
       }
     }
 
+    function exportCode() {
+      const code = editor.state.doc.toString(); // Get the code from the editor
+      
+      const blob = new Blob([code], { type: "text/plain "}); // Create a Blob object with the code
+      const a = document.createElement("a"); // Create a link element
+      a.href = URL.createObjectURL(blob); // Set the URL pointing to Blob
+      a.download = "stormvogel_playground.py" // Set the default filename
+
+      document.body.appendChild(a); // Add the link element to the DOM
+      a.click() // 'Click' the download link
+      document.body.removeChild(a); // After the download has been initiated remove the link element
+    }
+
     // Adds code editor with syntax highlighting
     function createEditor() {
         editor = new EditorView({
             doc: code,
             // Sets up the editor with Python syntax highlighting, tab handling and linting
-            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(), linter(lintCode)],
+            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
             parent: document.querySelector(".code-editor"),
         });
     }
@@ -188,6 +201,10 @@
         class="nav-btn">
         {saveStatus === 'saved' ? 'Saved' : 'Save'}
       </button>
+      <button on:click={exportCode}
+        class="nav-btn">
+        Export
+      </button>
     </nav>
   </header>
 
@@ -213,19 +230,7 @@
     <div class="visualization-panel">
       <div class="model-preview">
         <iframe id="sandboxFrame" title="sandboxed_iframe" sandbox="allow-scripts" style="width:100%; height:100%; border:none;"
-                srcdoc='<!DOCTYPE html>
-                  <html lang="en">
-                  <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Preview</title>
-                  </head>
-                  <body>
-                    <div class="model-preview">
-                      {output_html} <!-- Injecting your output HTML -->
-                    </div>
-                  </body>
-                  </html>'>
+                srcdoc={output_html}>
         </iframe>
       </div>
       <div class="output-console">
