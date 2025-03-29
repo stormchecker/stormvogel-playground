@@ -14,7 +14,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 
 '''
 Creates session and starts sandbox for user
-is called fron svelte post request: 
+is called from svelte post request: 
     in startup function in script (+page_svelte)
 '''
 @app.route('/startup', methods=['POST'])
@@ -25,7 +25,7 @@ def create_session():
         session["user_id"] = str(uuid.uuid4())
     if sandbox.start_sandbox(session["user_id"]):
         print(f"Created new sandbox for user {session['user_id']}")
-        return jsonify({"status": "success", "message": "Succeded in lauching container"}), 200
+        return jsonify({"status": "success", "message": "Succeeded in launching container"}), 200
     return jsonify({"status": "error", "message": "Failed to launch sandbox"}), 400
 
 '''
