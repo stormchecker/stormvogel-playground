@@ -27,7 +27,10 @@ project-root/
 ### **Backend Setup (Flask)**
 1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
    also install Gvisor: https://gvisor.dev/docs/user_guide/install/
-
+   To get the docker image we now only need to call this :
+   ```bash
+   docker pull stormvogel/stormvogel
+   ```
 
 2. Install flask and library for .env:
     ```bash

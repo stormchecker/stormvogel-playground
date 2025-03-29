@@ -57,7 +57,7 @@
         editor = new EditorView({
             doc: code,
             // Sets up the editor with Python syntax highlighting, tab handling and linting
-            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(), linter(lintCode)],
+            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
             parent: document.querySelector(".code-editor"),
         });
     }
@@ -276,19 +276,7 @@
     <div class="visualization-panel">
       <div class="model-preview">
         <iframe id="sandboxFrame" title="sandboxed_iframe" sandbox="allow-scripts" style="width:100%; height:100%; border:none;"
-                srcdoc='<!DOCTYPE html>
-                  <html lang="en">
-                  <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Preview</title>
-                  </head>
-                  <body>
-                    <div class="model-preview">
-                      {output_html} <!-- Injecting your output HTML -->
-                    </div>
-                  </body>
-                  </html>'>
+                srcdoc={output_html}>
         </iframe>
       </div>
       <div class="output-console">
