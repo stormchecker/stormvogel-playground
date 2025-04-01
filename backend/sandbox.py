@@ -4,6 +4,7 @@ import re
 import html
 import io
 import tarfile
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -12,13 +13,11 @@ client = docker.from_env()
 
 def start_sandbox(user_id):
     container_name = f"sandbox_{user_id}"
-    existing_containers = client.containers.list(all=True, filters={"name": container_name})
+    existing_containers = client.containers.list(filters={"name": container_name})
     logger.info(existing_containers)
     
     if existing_containers:
         container = existing_containers[0]
-        if container.status != "running":
-            container.start()
         logger.info(f"Reusing container {container.id} for user {user_id}")
     else:
         container = client.containers.run(
@@ -33,6 +32,7 @@ def start_sandbox(user_id):
             cpu_quota=50000,
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
+        write_file_to_container("./timeout.py", container)
     return container
 
 def separate_html(text):
@@ -47,24 +47,29 @@ def separate_html(text):
 
     return html_content, non_html_content
 
-def write_to_file(code,container):
+def write_file_to_container(src_path, container):
+    tarstream = io.BytesIO()
+    with tarfile.open(fileobj=tarstream, mode='w') as tar:
+        tar.add(src_path, arcname=os.path.basename(src_path))    
+    tarstream.seek(0)
+    if container.put_archive("/", tarstream):
+        logger.debug(f"Wrote {src_path} to {container.id}:/")
+    else:
+        logger.debug("File transfer failure")
 
+def write_to_file(code, container):
     tarstream = io.BytesIO()
     with tarfile.TarFile(fileobj=tarstream, mode="w") as tar:
         tarinfo = tarfile.TarInfo("script.py")
         tarinfo.size = len(code.encode())
         tar.addfile(tarinfo, io.BytesIO(code.encode()))
 
-    # Seek to the beginning of the stream
     tarstream.seek(0)
     logger.debug(f"file{tarstream}")
     if container.put_archive("/", tarstream):
         logger.debug("File transfer success")
     else:
         logger.debug("File transfer failure")
-
-    return "/script.py" 
-
 
 def execute_code(user_id, code):
     container_name = f"sandbox_{user_id}"
@@ -85,24 +90,28 @@ def execute_code(user_id, code):
 
         logger.debug(f"Executing code for {user_id}: {repr(code)}")
         
-        # Use a heredoc to write the code, ensuring proper termination
-        write_cmd = write_to_file(code,container)
+        #use a heredoc to write the code, ensuring proper termination
+        write_to_file(code, container)
 
-        logger.debug(f"Write command: {write_cmd}")
-        
-        # Execute the script
-        exec_result = container.exec_run(["python3", write_cmd], stdout=True, stderr=True)
+        #execute the script
+        #could use demux=True, this seperates into two byte string (stdout, stderr) instead of output.
+        exec_result = container.exec_run(["python3", "/timeout.py"], stdout=True, stderr=True)
         output = exec_result.output.decode()
-        logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
-        
 
-        # Separate output from debug information
-        iframe_html, logs = separate_html(output)
-        
+        match = re.search(r'Timeout10sec!', output)
+
+        if match:
+            logger.debug(f"Found a match, timed out!")
+            return {"status": "error", "message": "Execution exceeded 10-second time limit, force quit"}
+
         if exec_result.exit_code == 0:
+            logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
+            #separate output from debug information
+            iframe_html, logs = separate_html(output)
             return {"status": "success", "output_html": iframe_html , "output_non_html": logs}
         else:
             return {"status": "error", "message": f"Execution failed: {output}"}
+
     except docker.errors.NotFound:
         logger.error(f"Container {container_name} not found")
         return {"status": "error", "message": "Container not found"}
