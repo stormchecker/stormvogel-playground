@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import Page from '../src/routes/+page.svelte';
 import { mapSeverity, parseLintErrors } from '../src/utils.js'; // Import functions
 import { vi } from 'vitest';
@@ -130,11 +130,10 @@ describe('Page Component', () => {
     fireEvent.click(executeButton);
   
     // Wait for the output to appear
-    const outputElement = await screen.findByText('Hello, World!');
-    expect(outputElement).toBeInTheDocument();
-  
-    // Restore original fetch after test
-    vi.restoreAllMocks();
+    await waitFor(() => {
+      expect(screen.getByText('Hello, World!')).toBeInTheDocument();
+    });
+    
   });
 
   test('lints code and displays errors', async () => {
@@ -180,7 +179,7 @@ describe('Page Component', () => {
         }
       }
     };
-
+    
     const errors = parseLintErrors(lintOutput, editor.state.doc);
     expect(errors).toEqual([
       { from: 0, to: 20, severity: 'error', message: 'Example error message' },
