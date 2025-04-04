@@ -136,6 +136,8 @@
       //output_non_html = result.output_non_html;
       //error = result.message;
     } catch (e) {
+      output_html = "";
+      output_non_html = "";
       error = "Failed to connect to execution server";
     } finally {
       isExecuting = false;
