@@ -3,7 +3,7 @@ import sys
 
 try:
     result = subprocess.run(
-        ["python3", "/script.py"], timeout=10, text=True
+        ["python3", "/script.py"], timeout=30, text=True
     )        
 except subprocess.TimeoutExpired:
     print("Timeout10sec!", file=sys.stderr)
