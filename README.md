@@ -57,15 +57,33 @@ project-root/
     sudo python3 app.py
     ```
 
-### **Running backend (Flask)**
+### **Running frontend (Svelte)**
 1. in frontend folder:
     ```bash
     npm run (build/dev)
     ```
 
----
+### Testing
 
-### **
+To get a coverage report of the frontend run:
+```bash
+npm run coverage 
+```
+To just test the frontend:
+```bash
+npm test
+```
+
+To run end-to-end tests run playwright:
+```bash
+npm run playwright
+```
+You can also run the tests in ui mode:
+```sh
+npm run playwright:ui
+```
+
+---
 
 ## 🤝 Collaboration Guidelines
 

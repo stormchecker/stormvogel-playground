@@ -7,7 +7,13 @@ export default defineConfig({
   test: {
 		globals: true,
 		environment: 'jsdom',
-		setupFiles: './vitest.setup.js'
+		setupFiles: './vitest.setup.js',
+		exclude: ['**/node_modules/**', '**/tests-playwright/**'],
+		include: ['**/tests-vitest/**'],
+		coverage: {
+			include: ['src/**/*.{js,svelte}'],
+			exclude: ['**/node_modules/**', '**/tests-vitest/**', '**/tests-playwright/**']
+		}
 	},
   resolve: process.env.VITEST
 		? {

@@ -29,6 +29,10 @@ frontend/dist/
 frontend/build/
 frontend/public/build/
 
+# Vitest project ignores
+frontend/coverage/
+frontend/html/
+
 # Docker-related ignores
 docker-compose.override.yml
 .dockerignore
