@@ -120,12 +120,24 @@
         body: JSON.stringify({ code }), 
         credentials: 'include'
       });
-      
+    
       const result = await response.json();
-      output_html = result.output_html;
-      output_non_html = result.output_non_html;
-      error = result.message;
+
+        console.log("Status of execution response: ", result.status);
+        if (result.status === "success") {
+            output_html = result.output_html;
+            output_non_html = result.output_non_html;
+            error = "";
+        } else {
+            error = result.message || "An unknown error occurred";
+        }
+        
+      //output_html = result.output_html;
+      //output_non_html = result.output_non_html;
+      //error = result.message;
     } catch (e) {
+      output_html = "";
+      output_non_html = "";
       error = "Failed to connect to execution server";
     } finally {
       isExecuting = false;
