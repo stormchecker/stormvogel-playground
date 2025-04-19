@@ -19,6 +19,11 @@
   let isExecuting = false;
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
+  let activeTab = "Model.py"; // Track the active tab  
+  let tabs = {
+      "Model.py": "",
+      "Model.prism": "",
+    };
 
   // Save code to local storage
     function saveCode() {
@@ -62,6 +67,62 @@
         });
     }
 
+    function switchTab(tabName) {
+      if (activeTab !== tabName) {
+        tabs[activeTab] = editor.state.doc.toString(); // Save current tab's content
+        activeTab = tabName;
+        code = tabs[activeTab]; // Load the selected tab's content
+        editor.dispatch({
+          changes: { from: 0, to: editor.state.doc.length, insert: code },
+        });
+      }
+    }
+  
+    function closeTab(tabName) {
+      if (Object.keys(tabs).length > 1) {
+        const updatedTabs = { ...tabs }; // Create a copy of the tabs object
+        delete updatedTabs[tabName]; // Remove the tab
+        tabs = updatedTabs; // Update the tabs object
+  
+        if (activeTab === tabName) {
+          activeTab = Object.keys(tabs)[0]; // Switch to the first available tab
+          code = tabs[activeTab]; // Update the editor content
+          editor.dispatch({
+            changes: { from: 0, to: editor.state.doc.length, insert: code }
+          });
+        }
+      } else {
+        alert("At least one tab must remain open.");
+      }
+    }
+
+    function addTab() {
+      let newTabIndex = 1;
+      while (tabs[`Tab ${newTabIndex}`] !== undefined) {
+        newTabIndex++; // Find the next available unique tab name
+      }
+      const newTabName = `Tab ${newTabIndex}`;
+      tabs = { ...tabs, [newTabName]: "" }; 
+      activeTab = newTabName; // Set the new tab as active
+      code = tabs[activeTab]; // Update the editor content
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: code }
+      });
+    }
+
+    // Enable horizontal scrolling with the mouse wheel
+    function tabScrollHandler() {
+      const tabContainer = document.querySelector(".tab-container");
+      if (tabContainer) {
+        tabContainer.addEventListener("wheel", (event) => {
+          if (event.deltaY !== 0) {
+            event.preventDefault();
+            tabContainer.scrollLeft += event.deltaY;
+          }
+        });
+      }
+    }
+
     onMount(() => {
         // Load code from local storage
         window.addEventListener("beforeunload", function () {
@@ -73,9 +134,9 @@
             code = savedCode;
         }
         
-        // Load the editor
-        createEditor();
+        createEditor(); // Load the editor
         startupBackend(); 
+        tabScrollHandler();
     });
 
     onDestroy(() => {
@@ -223,7 +284,51 @@
   <div class="main-content">
     <div class="code-panel">
       <div class="editor-header">
-        <span class="file-tab active">model.py</span>
+        <div class="tab-container">
+          {#each Object.keys(tabs) as tabName}
+              <!-- {#each tabs as tabName} -->
+              <div
+                  class="tab {activeTab === tabName ? 'active' : ''}"
+                  role="button"
+                  tabindex="0"
+                  on:click={() => switchTab(tabName)}
+                  on:keydown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          switchTab(tabName);
+                      }
+                  }}
+              >
+                  {tabName}
+                  {#if activeTab === tabName}
+                      <button
+                          type="button"
+                          class="close-tab"
+                          on:click={(e) => {
+                              e.stopPropagation();
+                              closeTab(tabName);
+                          }}
+                          on:keydown={(e) => {
+                              if (
+                                  e.key === "Enter" ||
+                                  e.key === " "
+                              ) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  closeTab(tabName);
+                              }
+                          }}
+                      >
+                        ×
+                      </button>
+                  {/if}
+              </div>
+          {/each}
+
+          <button type="button" class="tab add-tab" on:click={addTab}
+              >+</button
+          >
+      </div>
         <button on:click={executeCode} class="nav-btn" disabled={isExecuting}>
           <span class="button-content">
             {#if isExecuting}
@@ -362,21 +467,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #eaeaea;
-    padding: 8px 16px;
+    background: oklch(88.2% 0.059 254.128);
+    padding: 4px 16px;
     border-bottom: 1px solid #ddd;
-  }
-
-  .file-tab {
-    padding: 6px 12px;
-    background: #fff;
-    border-radius: 4px 4px 0 0;
-    border: 1px solid #ddd;
-  }
-
-  .file-tab.active {
-    border-bottom: 2px solid #007acc;
-    font-weight: bold;
   }
 
   .code-editor {
@@ -460,4 +553,61 @@
     border-radius: 5px;
     opacity: 0.9;
   }
+
+  .tab-container {
+        display: flex;
+        background: oklch(93.2% 0.032 255.585); 
+        padding: 0.3rem;
+        border-radius: 9999px;
+        position: relative;
+        gap: 0.3rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        scrollbar-color: oklch(88.2% 0.059 254.128) transparent;
+
+        margin-bottom: 0px;
+    }
+
+    .tab {
+        padding: 0.5rem 1rem;
+        background: oklch(97% 0.014 254.604); /* Light background */
+        border: 2px solid #d0e1f9; /* Subtle border */
+        border-radius: 9999px; /* Pill shape */
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        font-size: 1rem;
+        color: rgb(80, 80, 80);
+        position: relative;
+        z-index: 0;
+    }
+
+    .tab.active {
+        background: white;
+        z-index: 1;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        color: #000;
+        border: none;
+    }
+
+    .tab:hover:not(.active) {
+        background-color: oklch(93% 0.014 254.604);
+        border-color: oklch(62.3% 0.214 259.815);
+    }
+
+    .close-tab {
+        margin-left: 8px;
+        font-size: 1rem;
+        color: grey;
+        cursor: pointer;
+        font-weight: bold;
+        background: none;
+        border: none;
+        padding: 0;
+    }
+
+    .close-tab:hover {
+        color: darkgrey;
+    }
 </style>
