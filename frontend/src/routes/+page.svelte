@@ -286,7 +286,6 @@
       <div class="editor-header">
         <div class="tab-container">
           {#each Object.keys(tabs) as tabName}
-              <!-- {#each tabs as tabName} -->
               <div
                   class="tab {activeTab === tabName ? 'active' : ''}"
                   role="button"
@@ -555,22 +554,22 @@
   }
 
   .tab-container {
+        margin-left: -12px;
         display: flex;
         background: oklch(93.2% 0.032 255.585); 
-        padding: 0.3rem;
+        padding: 4px;
         border-radius: 9999px;
         position: relative;
-        gap: 0.3rem;
+        gap: 4px;
         overflow-x: auto;
         overflow-y: hidden;
         white-space: nowrap;
         scrollbar-color: oklch(88.2% 0.059 254.128) transparent;
-
         margin-bottom: 0px;
     }
 
     .tab {
-        padding: 0.5rem 1rem;
+        padding: 6px 1rem;
         background: oklch(97% 0.014 254.604); /* Light background */
         border: 2px solid #d0e1f9; /* Subtle border */
         border-radius: 9999px; /* Pill shape */
@@ -592,22 +591,26 @@
     }
 
     .tab:hover:not(.active) {
-        background-color: oklch(93% 0.014 254.604);
+        background-color: #c7ddff; /* Light blue on hover */
         border-color: oklch(62.3% 0.214 259.815);
     }
 
-    .close-tab {
-        margin-left: 8px;
-        font-size: 1rem;
-        color: grey;
-        cursor: pointer;
-        font-weight: bold;
-        background: none;
-        border: none;
-        padding: 0;
-    }
+  .close-tab {
+    margin-left: 2px;   /* optional slight left spacing */
+    margin-right: -8px; /* shift the button a bit into the rounded edge */
+    font-size: 1rem;
+    color: rgb(102, 102, 102);
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    width: 24px;  /* Set a fixed width  for the round button */
+    height: 24px; /* Set a fixed height for the round button */
+    border-radius: 50%;    /* Make it round */
+    background: #f0f0f0; /* Light background */
+    transition: background 0.3s, color 0.3s;
+  }
 
-    .close-tab:hover {
-        color: darkgrey;
-    }
+  .close-tab:hover {
+    background: #cecece; /* Slightly darker background on hover */
+  }
 </style>
