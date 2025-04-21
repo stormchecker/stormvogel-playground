@@ -25,24 +25,26 @@
       "Model.prism": "",
     };
 
-  // Save code to local storage
-    function saveCode() {
-        const code = editor.state.doc.toString(); // Get the code from the editor
-        try { // Try to save the code
-          localStorage.setItem("python_code",code); // Save for a number of days
-          saveStatus = 'saved';
-          saveToast = true;
-          setTimeout(() => { // After 2 seconds set saveStatus back to default
-            saveStatus = 'idle'
-          }, 2000);
-          setTimeout(() => { // After 3 seconds set saveToast to false so it fades away
-            saveToast = false
-          }, 3000);
-        } catch (error) { // If there are errors while saving, output it to the console
-          console.error("Failed to save code: ", error);
-          alert("Error, unable to save code.");
-      }
+  // Save all tabs to local storage
+  function saveCode() {
+    try {
+      // Update the active tab's content in the tabs object
+      tabs[activeTab] = editor.state.doc.toString();
+      const tabsData = JSON.stringify(tabs); // Convert the tabs object to JSON
+      localStorage.setItem("tabs_data", tabsData); // Save the JSON string to local storage
+      saveStatus = 'saved';
+      saveToast = true;
+      setTimeout(() => { // After 2 seconds set saveStatus back to default
+        saveStatus = 'idle';
+      }, 2000);
+      setTimeout(() => { // After 3 seconds set saveToast to false so it fades away
+        saveToast = false;
+      }, 3000);
+    } catch (error) { // If there are errors while saving, output it to the console
+      console.error("Failed to save tabs: ", error);
+      alert("Error, unable to save tabs.");
     }
+  }
 
     function exportCode() {
       const code = editor.state.doc.toString(); // Get the code from the editor
@@ -68,8 +70,9 @@
     }
 
     function switchTab(tabName) {
+      // Save the current tab's content before switching
+      tabs[activeTab] = editor.state.doc.toString();
       if (activeTab !== tabName) {
-        tabs[activeTab] = editor.state.doc.toString(); // Save current tab's content
         activeTab = tabName;
         code = tabs[activeTab]; // Load the selected tab's content
         editor.dispatch({
@@ -123,21 +126,27 @@
       }
     }
 
+    function getTabData() {
+      const savedTabs = localStorage.getItem("tabs_data");
+      if (savedTabs) {
+        tabs = JSON.parse(savedTabs); // Parse the JSON string back into an object
+        activeTab = Object.keys(tabs)[0]; // Set the first tab as active
+        code = tabs[activeTab]; // Load the content of the active tab
+      }
+    }
+
     onMount(() => {
-        // Load code from local storage
-        window.addEventListener("beforeunload", function () {
-            saveCode();
-            stopExecution();
-        });
-        const savedCode = localStorage.getItem("python_code");
-        if (savedCode) {
-            code = savedCode;
-        }
-        
-        createEditor(); // Load the editor
-        startupBackend(); 
-        tabScrollHandler();
+    // Load tabs from local storage
+    window.addEventListener("beforeunload", function () {
+      saveCode();
+      stopExecution();
     });
+
+    getTabData();   // Load the tabs from local storage
+    createEditor(); // Load the editor
+    startupBackend();
+    tabScrollHandler();
+  });
 
     onDestroy(() => {
         window.removeEventListener("beforeunload", function () {
@@ -145,7 +154,6 @@
             stopExecution();
         });
     });
-
 
   async function startupBackend() {
     try {
