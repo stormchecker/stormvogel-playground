@@ -7,6 +7,7 @@
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
   import { parseLintErrors } from '../utils';
+  import JSZip from "jszip"; // Import JSZip for creating zip files
 
   let code = "";
   let specification = 'Calculate probability from start to end';
@@ -46,18 +47,30 @@
     }
   }
 
-    function exportCode() {
-      const code = editor.state.doc.toString(); // Get the code from the editor
-      
-      const blob = new Blob([code], { type: "text/plain "}); // Create a Blob object with the code
-      const a = document.createElement("a"); // Create a link element
-      a.href = URL.createObjectURL(blob); // Set the URL pointing to Blob
-      a.download = "stormvogel_playground.py" // Set the default filename
+  function exportCode() {
+    
+    const zip = new JSZip(); // Create a new zip instance
+    const now = new Date();
+    // Format date as dd-mm-yyyy
+    const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`; 
+    console.log("Date: ", date);
+    var folder = zip.folder(`stormvogel-playground-${date}`); // Create a folder in the zip with the date in the name
 
-      document.body.appendChild(a); // Add the link element to the DOM
-      a.click() // 'Click' the download link
-      document.body.removeChild(a); // After the download has been initiated remove the link element
+    // Add each tab's content to the folder in the zip
+    for (const [fileName, fileContent] of Object.entries(tabs)) {
+      folder.file(fileName, fileContent);
     }
+
+    // Generate the zip file and trigger download
+    zip.generateAsync({ type: "blob" }).then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `stormvogel-playground-${date}.zip`; // Set the name of the zip file
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
 
     // Adds code editor with syntax highlighting
     function createEditor() {

@@ -34,23 +34,34 @@ test('Loads the page and checks initial elements', async ({ page }) => {
   await expect(page.locator('.model-preview')).toBeVisible();
 });
 
-test('Save code functionality', async ({ page }) => {
+test('Save code functionality with multiple tabs', async ({ page }) => {
   await page.goto('/');
 
+  // Add a new tab
+  await page.locator('button.add-tab').click();
+
+  // Add code to the first tab
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
   const editor = page.locator('.cm-content');
   await editor.click();
-  await editor.fill('print("Hello, Playwright!")');
+  await editor.fill('print("Code in Model.py")');
 
-  // Click the save button
+  // Switch to the third tab and add code
+  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await editor.click();
+  await editor.fill('print("Code in Tab 1")');
+
+  // Save all tabs
   await page.locator('button', { hasText: 'Save' }).click();
 
   // Check if the save toast is visible
-  await expect(page.locator('.save-toast', {hasText: 'The code has been saved successfully'})).toBeVisible();
+  await expect(page.locator('.save-toast', { hasText: 'The code has been saved successfully' })).toBeVisible();
   await expect(page.locator('button', { hasText: 'Saved' })).toBeVisible();
 
-  // Check if code is saved in localStorage
-  const savedCode = await page.evaluate(() => localStorage.getItem('python_code'));
-  expect(savedCode).toBe('print("Hello, Playwright!")');
+  // Check if all tabs are saved in localStorage
+  const savedTabs = await page.evaluate(() => JSON.parse(localStorage.getItem('tabs_data')));
+  expect(savedTabs['Model.py']).toBe('print("Code in Model.py")');
+  expect(savedTabs['Tab 1']).toBe('print("Code in Tab 1")');
 });
 
 test('Execute Python code and check output', async ({ page }) => {
@@ -124,23 +135,40 @@ test('Execute faulty Python code and check for errors', async ({ page }) => {
   await expect(errorLocator).toContainText('SyntaxError');
 });
 
-test('Test auto save functionality', async ({ page }) => {
-  await page.goto('/'); 
+test('Test auto save functionality with multiple tabs', async ({ page }) => {
+  await page.goto('/');
 
-  // Locate the CodeMirror editor and input Python code
+  // Add a new tab
+  await page.locator('button.add-tab').click();
+
+  // Add code to the first tab
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
   const editor = page.locator('.cm-content');
   await editor.click();
-  await editor.fill('print("Loaded from localStorage")');
+  await editor.fill('print("Code in Model.py")');
 
-  // Save the code to localStorage manually (for some reason it the test doesn't save it automatically)
-  await page.evaluate(() => localStorage.setItem('python_code', 'print("Loaded from localStorage")'));
-
-  // Reload the page to ensure the code is loaded from localStorage
+  // Add code to the second tab
+  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await editor.click();
+  await editor.fill('print("Code in Tab 1")');
+  
+  // For some reason, playwright doesn't set the localStorage item when refreshing the page
+  await page.evaluate(() => localStorage.setItem('tabs_data', JSON.stringify({
+    'Model.py': 'print("Code in Model.py")',
+    'Model.prism': '',
+    'Tab 1': 'print("Code in Tab 1")'
+  })));
   await page.reload();
+  
+  // Verify the first tab's content
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
+  const editorContent1 = await page.locator('.cm-content').textContent();
+  expect(editorContent1).toBe('print("Code in Model.py")');
 
-  // Check if the code editor contains the saved code
-  const editorContent = await page.locator('.cm-content').textContent();
-  expect(editorContent).toBe('print("Loaded from localStorage")');
+  // Verify the second tab's content
+  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  const editorContent2 = await page.locator('.cm-content').textContent();
+  expect(editorContent2).toBe('print("Code in Tab 1")');
 });
 
 test('Check if code editor initializes correctly with no saved code', async ({ page }) => {
@@ -156,22 +184,38 @@ test('Check if code editor initializes correctly with no saved code', async ({ p
 });
 
 
-test('Test user navigates away and returns', async ({ page }) => {
-  await page.goto('/'); 
+test('Test user navigates away and returns with multiple tabs', async ({ page }) => {
+  await page.goto('/');
 
+  // Add a new tab
+  await page.locator('button.add-tab').click();
+
+  // Add code to the first tab
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
   const editor = page.locator('.cm-content');
   await editor.click();
-  await editor.fill('print("Hello, Playwright!")');
-  
+  await editor.fill('print("Code in Model.py")');
+
+  // Add code to the second tab
+  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await editor.click();
+  await editor.fill('print("Code in Tab 1")');
+
   // Navigate away
   await page.goto('https://www.google.com');
 
   // Navigate back
   await page.goto('/');
 
-  // Check if the code editor contains the saved code
-  const editorContent = await page.locator('.cm-content').innerText();
-  expect(editorContent).toBe('print("Hello, Playwright!")');
+  // Verify the first tab's content
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
+  const editorContent1 = await page.locator('.cm-content').textContent();
+  expect(editorContent1).toBe('print("Code in Model.py")');
+
+  // Verify the second tab's content
+  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  const editorContent2 = await page.locator('.cm-content').textContent();
+  expect(editorContent2).toBe('print("Code in Tab 1")');
 });
 
 test('Test user inputs large amount of code', async ({ page }) => {
