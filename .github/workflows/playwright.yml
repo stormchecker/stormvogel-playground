@@ -1,4 +1,5 @@
 name: Playwright Tests
+
 on:
   push:
     branches: [ main, master, dev, feature/arthur/automate-testing ]
@@ -40,7 +41,7 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
-        working-directory: ./
+        working-directory: ./frontend
 
       - uses: actions/cache@v4
         with:
@@ -64,21 +65,36 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 30
 
+      # Docker installation and setup steps
       - name: Install Docker
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker.io
+          sudo apt-get install -y ca-certificates curl gnupg lsb-release
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
       - name: Install gVisor
         run: |
-          wget https://storage.googleapis.com/gvisor/releases/release/latest/x86_64/runsc
-          chmod +x runsc
-          sudo mv runsc /usr/local/bin/
-          sudo runsc install
-
+          ARCH=$(uname -m)
+          URL=https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}
+          wget ${URL}/runsc ${URL}/runsc.sha512 \
+            ${URL}/containerd-shim-runsc-v1 ${URL}/containerd-shim-runsc-v1.sha512
+          sha512sum -c runsc.sha512 \
+            -c containerd-shim-runsc-v1.sha512
+          rm -f *.sha512
+          chmod a+rx runsc containerd-shim-runsc-v1
+          sudo mv runsc containerd-shim-runsc-v1 /usr/local/bin/
+          
       - name: Configure Docker to use gVisor
         run: |
           echo '{"runtimes": {"runsc": {"path": "/usr/local/bin/runsc"}}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl daemon-reload
           sudo systemctl restart docker
 
       - name: Start Docker service
@@ -88,3 +104,8 @@ jobs:
         run: |
           docker info
           docker run --runtime=runsc --rm hello-world
+
+      - name: Run Docker Container with gVisor runtime
+        run: |
+          docker build --tag my-container-name .
+          docker run -i -t --runtime=runsc my-container-name
