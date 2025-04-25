@@ -63,3 +63,28 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report/
           retention-days: 30
+
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Install gVisor
+        run: |
+          wget https://storage.googleapis.com/gvisor/releases/release/latest/x86_64/runsc
+          chmod +x runsc
+          sudo mv runsc /usr/local/bin/
+          sudo runsc install
+
+      - name: Configure Docker to use gVisor
+        run: |
+          echo '{"runtimes": {"runsc": {"path": "/usr/local/bin/runsc"}}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Start Docker service
+        run: sudo systemctl start docker
+
+      - name: Verify Docker and gVisor setup
+        run: |
+          docker info
+          docker run --runtime=runsc --rm hello-world
