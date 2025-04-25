@@ -108,5 +108,5 @@ jobs:
 
       - name: Run Docker Container with gVisor runtime
         run: |
-          docker build --tag my-container-name .
-          docker run -i -t --runtime=runsc my-container-name
+          docker build --tag stormvogel .
+          docker run -i -t --runtime=runsc stormvogel
