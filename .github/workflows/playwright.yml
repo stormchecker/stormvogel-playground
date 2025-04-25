@@ -54,19 +54,7 @@ jobs:
         run: npx playwright install --with-deps
         working-directory: ./frontend
 
-      - name: Run Playwright tests
-        run: npx playwright test
-        working-directory: ./frontend
-        continue-on-error: true
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-          retention-days: 30
-
-      # Docker installation and setup steps
+        # Docker installation and setup steps
       - name: Install Docker
         run: |
           sudo apt-get update
@@ -110,3 +98,17 @@ jobs:
         run: |
           docker build --tag stormvogel .
           docker run -i -t --runtime=runsc stormvogel
+          working-directory: ./
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        working-directory: ./frontend
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+
