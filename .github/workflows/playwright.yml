@@ -96,9 +96,9 @@ jobs:
           docker info
           docker run --runtime=runsc --rm hello-world
 
-      - name: Run Docker Container with gVisor runtime
+      - name: Pull Docker Container
         run: |
-          docker run -it -p 8080:8080 stormvogel/stormvogel
+          docker pull stormvogel/stormvogel
 
       - name: Run Playwright tests
         run: npx playwright test
