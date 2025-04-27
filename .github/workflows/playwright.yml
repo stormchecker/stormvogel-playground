@@ -91,14 +91,25 @@ jobs:
       - name: Start Docker service
         run: sudo systemctl start docker
 
-      - name: Verify Docker and gVisor setup
-        run: |
-          docker info
-          docker run --runtime=runsc --rm hello-world
+      - name: Cache Docker Image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
 
-      - name: Pull Docker Container
+      - name: Save Docker Image to Cache
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
+          mkdir -p /tmp/docker-cache
           docker pull stormvogel/stormvogel
+          docker save stormvogel/stormvogel -o /tmp/docker-cache/stormvogel.tar
+
+      - name: Load Docker Image from Cache
+        if: steps.cache.outputs.cache-hit == 'true'
+        run: |
+          docker load -i /tmp/docker-cache/stormvogel.tar
 
       - name: Run Playwright tests
         run: npx playwright test
