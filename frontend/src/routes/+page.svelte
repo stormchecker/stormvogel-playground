@@ -93,7 +93,7 @@
         });
       }
     }
-  
+
     function closeTab(tabName) {
       if (Object.keys(tabs).length > 1) {
         const updatedTabs = { ...tabs }; // Create a copy of the tabs object
@@ -124,6 +124,19 @@
       editor.dispatch({
         changes: { from: 0, to: editor.state.doc.length, insert: code }
       });
+    }
+
+    function renameActiveTab() {
+      const newTabName = prompt("Enter new name for the active tab:", activeTab);
+      if (newTabName && newTabName !== activeTab && !tabs[newTabName]) {
+        const updatedTabs = { ...tabs };
+        updatedTabs[newTabName] = updatedTabs[activeTab];
+        delete updatedTabs[activeTab];
+        tabs = updatedTabs;
+        activeTab = newTabName;
+      } else if (tabs[newTabName]) {
+        alert("A tab with this name already exists.");
+      }
     }
 
     // Enable horizontal scrolling with the mouse wheel
@@ -311,12 +324,23 @@
                   class="tab {activeTab === tabName ? 'active' : ''}"
                   role="button"
                   tabindex="0"
-                  on:click={() => switchTab(tabName)}
+                  data-tab-name={tabName}
+                  on:click={() => {
+                    if (activeTab === tabName) {
+                      renameActiveTab();
+                    } else {
+                      switchTab(tabName);
+                    }
+                  }}
                   on:keydown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          switchTab(tabName);
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (activeTab === tabName) {
+                        renameActiveTab();
+                      } else {
+                        switchTab(tabName);
                       }
+                    }
                   }}
               >
                   {tabName}
@@ -349,12 +373,16 @@
               >+</button
           >
       </div>
-        <button on:click={executeCode} class="nav-btn" disabled={isExecuting}>
+        <button 
+          on:click={executeCode} 
+          class="nav-btn" 
+          style={isExecuting ? "background: oklch(93.2% 0.032 255.585);" : ""}
+        >
           <span class="button-content">
             {#if isExecuting}
               <img src="/progress.svg" alt="Executing..." class="progress-icon" />
             {:else}
-              Execute
+              <span>▶ Run</span>
             {/if}
           </span>
         </button>
@@ -386,8 +414,8 @@
       class="spec-input"
     />
     <div class="controls">
-      <button on:click={checkSpecification} class="action-btn">Analyze</button>
-      <button on:click={simulate} class="action-btn">Simulate</button>
+      <button on:click={checkSpecification} class="nav-btn">Analyze</button>
+      <button on:click={simulate} class="nav-btn">Simulate</button>
     </div>
   </div>
 
@@ -432,23 +460,6 @@
 
   nav {
     display: flex;
-  }
-
-  .nav-btn {
-    background: #e6f0ff;
-    color: #007acc;
-    border: 1px solid #b3d1ff;
-    padding: 8px 16px;
-    margin-left: 1rem;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s;
-    display: flex;
-    align-items: center;
-  }
-
-  .nav-btn:hover {
-    background: #d0e0ff;
   }
 
   .button-content {
@@ -548,20 +559,6 @@
     border-radius: 4px;
   }
 
-  .action-btn {
-    background: #007acc;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s;
-  }
-
-  .action-btn:hover {
-    background: #005fa3;
-  }
-
   .save-toast {
     position: fixed;
     bottom: 70px;
@@ -579,7 +576,7 @@
         display: flex;
         background: oklch(93.2% 0.032 255.585); 
         padding: 4px;
-        border-radius: 9999px;
+        border-radius: 5px;
         position: relative;
         gap: 4px;
         overflow-x: auto;
@@ -593,7 +590,7 @@
         padding: 6px 1rem;
         background: oklch(97% 0.014 254.604); /* Light background */
         border: 2px solid #d0e1f9; /* Subtle border */
-        border-radius: 9999px; /* Pill shape */
+        border-radius: 5px;
         cursor: pointer;
         transition: all 0.2s ease;
         font-weight: 500;
@@ -634,4 +631,26 @@
   .close-tab:hover {
     background: #cecece; /* Slightly darker background on hover */
   }
+
+.nav-btn {
+  background: oklch(55.7% 0.165 254.624);
+  color: #fff;
+  border: none;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 0 4px;
+  cursor: pointer;
+  border-radius: 5px; /* Rounded pills */
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.nav-btn:hover {
+  background: oklch(93.2% 0.032 255.585);
+  color: oklch(40.7% 0.165 254.624);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 </style>

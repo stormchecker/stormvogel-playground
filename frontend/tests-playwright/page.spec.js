@@ -13,7 +13,7 @@ test('Loads the page and checks initial elements', async ({ page }) => {
   await expect(page.locator('button', { hasText: 'Save' })).toBeVisible();
 
   // Check if the execute button is present
-  await expect(page.locator('button', { hasText: 'Execute' })).toBeVisible();
+  await expect(page.locator('button', { hasText: '▶ Run' })).toBeVisible();
 
   // Check if the examples button is present
   await expect(page.locator('button', { hasText: 'Examples' })).toBeVisible();
@@ -74,7 +74,7 @@ test('Execute Python code and check output', async ({ page }) => {
   
   await page.waitForTimeout(1000); 
   // Click the execute button
-  await page.locator('button', { hasText: 'Execute' }).click();
+  await page.locator('button', { hasText: '▶ Run' }).click();
 
   // Wait for the output to appear
   const outputLocator = page.locator('#output-non-html'); // Check the first output element
@@ -91,7 +91,7 @@ test('Execute Python code, refresh page, and execute again', async ({ page }) =>
 
   await page.waitForTimeout(1000); 
   // Click the execute button
-  await page.locator('button', { hasText: 'Execute' }).click();
+  await page.locator('button', { hasText: '▶ Run' }).click();
 
   // Wait for the output to appear
   const outputLocator = page.locator('#output-non-html');
@@ -102,7 +102,7 @@ test('Execute Python code, refresh page, and execute again', async ({ page }) =>
   await page.reload();
 
   await page.waitForTimeout(1000); 
-  await page.locator('button', { hasText: 'Execute' }).click();
+  await page.locator('button', { hasText: '▶ Run' }).click();
   await expect(outputLocator).toHaveText('Hello, Playwright!');
 });
 
@@ -128,7 +128,7 @@ test('Execute faulty Python code and check for errors', async ({ page }) => {
   await expect(page.locator('.cm-tooltip-lint')).toContainText('unexpected EOF while parsing');
 
   // Click the execute button
-  await page.locator('button', { hasText: 'Execute' }).click();
+  await page.locator('button', { hasText: '▶ Run' }).click();
 
   // Check execution errors
   const errorLocator = page.locator('#error'); // Adjust selector as needed

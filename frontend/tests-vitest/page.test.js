@@ -57,7 +57,7 @@ describe('Page Component', () => {
 
   test('renders the Execute button', () => {
     render(Page);
-    expect(screen.getByText('Execute')).toBeInTheDocument();
+    expect(screen.getByText('▶ Run')).toBeInTheDocument();
   });
 
   test('loads code from local storage', async () => {
@@ -122,7 +122,7 @@ describe('Page Component', () => {
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
 
     // Click the execute button
-    const executeButton = screen.getByText('Execute');
+    const executeButton = screen.getByText('▶ Run');
     fireEvent.click(executeButton);
 
     // Wait for the output to appear

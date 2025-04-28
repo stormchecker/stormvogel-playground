@@ -129,12 +129,11 @@ def lint_code(user_id, code):
         logger.debug(f"Linting code for {user_id}: {repr(code)}")
         
         # Use a heredoc to write the code, ensuring proper termination
-        write_cmd = write_to_file(code, container)
-
-        logger.debug(f"Write command: {write_cmd}")
+        file_path = "/script.py"
+        write_to_file(code, container)
         
-        # Run Ruff with the temp file inside the container, ensuring it only checks the code
-        exec_result = container.exec_run(["ruff", "check", "--no-fix", write_cmd], stdout=True, stderr=True)
+        # Run Ruff with the correct file path
+        exec_result = container.exec_run(["ruff", "check", "--no-fix", file_path], stdout=True, stderr=True)
         output = exec_result.output.decode()
         logger.debug(f"Linting output: exit_code={exec_result.exit_code}, output={output}")
 
