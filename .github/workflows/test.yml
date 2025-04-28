@@ -32,7 +32,7 @@ jobs:
         working-directory: ./frontend
 
       - name: Run tests with coverage
-        run: npm run test -- --coverage
+        run: npm run coverage
         working-directory: ./frontend
 
       - name: Upload coverage report
@@ -40,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: ./frontend/coverage
+          path: coverage
