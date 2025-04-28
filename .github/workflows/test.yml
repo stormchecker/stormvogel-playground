@@ -5,12 +5,10 @@ on:
     branches:
       - main, 
       - dev, 
-      - feature/arthur/automate-testing
   pull_request:
     branches:
       - main, 
       - dev, 
-      - feature/arthur/automate-testing
 
 jobs:
   test:

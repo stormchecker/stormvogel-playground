@@ -2,9 +2,9 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [ main, master, dev, feature/arthur/automate-testing ]
+    branches: [ main, master, dev ]
   pull_request:
-    branches: [ main, master, dev, feature/arthur/automate-testing ]
+    branches: [ main, master, dev ]
 
 jobs:
   test:
@@ -32,25 +32,9 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Install Python dependencies
         run: pip install -r requirements.txt
         working-directory: ./
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
@@ -90,34 +74,11 @@ jobs:
 
       - name: Start Docker service
         run: sudo systemctl start docker
-
-      - name: Cache Docker Image
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/docker-cache
-          key: ${{ runner.os }}-docker-stormvogel
-          restore-keys: |
-            ${{ runner.os }}-docker-
       
       - name: Load or Pull Docker Image
         run: |
-          mkdir -p /tmp/docker-cache
-          if [ -f /tmp/docker-cache/stormvogel.tar ]; then
-            echo "Loading Docker image from cache..."
-            docker load -i /tmp/docker-cache/stormvogel.tar
-          else
-            echo "Cache not found, pulling Docker image..."
+            echo "Downloading stormvogel image..."
             docker pull stormvogel/stormvogel
-            docker save stormvogel/stormvogel -o /tmp/docker-cache/stormvogel.tar
-          fi
-
-      - name: Save Docker Image to Cache if Needed
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: /tmp/docker-cache
-          key: ${{ runner.os }}-docker-stormvogel
 
       - name: Run Playwright tests
         run: npx playwright test
