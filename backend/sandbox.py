@@ -96,6 +96,7 @@ def execute_code(user_id, code):
         #execute the script
         #could use demux=True, this seperates into two byte string (stdout, stderr) instead of output.
         exec_result = container.exec_run(["python3", "/timeout.py"], stdout=True, stderr=True)
+        logger.debug(f"Execution result: {exec_result}")
         output = exec_result.output.decode()
 
         match = re.search(r'Timeout10sec!', output)

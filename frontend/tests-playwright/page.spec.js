@@ -98,10 +98,12 @@ test('Execute Python code, refresh page, and execute again', async ({ page }) =>
   await expect(outputLocator).toHaveText('Hello, Playwright!');
 
   // Refresh the page
-  await page.evaluate(() => localStorage.setItem('python_code', 'print("Hello, Playwright!")'));
   await page.reload();
-
   await page.waitForTimeout(1000); 
+
+  await editor.click();
+  await editor.fill('print("Hello, Playwright!")');
+  
   await page.locator('button', { hasText: '▶ Run' }).click();
   await expect(outputLocator).toHaveText('Hello, Playwright!');
 });
