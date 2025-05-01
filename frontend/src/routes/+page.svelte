@@ -203,8 +203,42 @@
     }
   }  
 
+  async function saveTabs() {
+    try {
+        const response = await fetch('http://localhost:5000/save-tabs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tabs }),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (result.status !== 'success') {
+            console.error('Error saving tabs:', result.message);
+            alert('Error saving tabs: ' + result.message);
+            return false;
+        }
+
+        console.log('Tabs saved successfully in the container.');
+        return true;
+    } catch (e) {
+        console.error('Failed to save tabs to container:', e);
+        return false;
+    }
+}
+
   async function executeCode() {
     isExecuting = true;
+    // Save all tabs to the container before execution
+    const tabsSaved = await saveTabs();
+    if (!tabsSaved) {
+        isExecuting = false;
+        return;
+    }
+
+    // Execute the active tab's code
     const code = editor.state.doc.toString();
     try {
       const response = await fetch('http://localhost:5000/execute', {

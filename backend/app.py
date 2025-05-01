@@ -87,6 +87,22 @@ def stop_sandbox():
         return jsonify({"status": "success", "message": "Sandbox stopped"})
     return jsonify({"status": "error", "message": "No active session"}), 400
 
+@app.route('/save-tabs', methods=['POST'])
+def save_tabs():
+    if "user_id" not in session:
+        return jsonify({"status": "error", "message": "No active session"}), 400
+
+    tabs = request.json.get("tabs")
+    if not tabs:
+        return jsonify({"status": "error", "message": "No tabs provided"}), 400
+
+    try:
+        result = sandbox.save_tabs(session["user_id"], tabs)
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Failed to save tabs: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 # Call python3 app.py --debug for dev backend
 # Problems with passing arguments in my current setup, so hardcoded debug mode :|
 if __name__ == '__main__':
