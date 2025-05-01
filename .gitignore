@@ -93,3 +93,7 @@ staticfiles/
 .env
 .env.*
 .envrc
+
+# start.sh and Dockerfile
+start.sh
+Dockerfile
