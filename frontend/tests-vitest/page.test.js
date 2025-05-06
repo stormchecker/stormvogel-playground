@@ -31,7 +31,7 @@ beforeEach(() => {
       return Promise.resolve({
         json: () => Promise.resolve({
           status: 'success',
-          message: 'Succeeded in lauching container'
+          message: 'Succeeded in launching container'
         }),
       });
     } else if (url.endsWith('/lint')) {
@@ -57,29 +57,22 @@ describe('Page Component', () => {
 
   test('renders the Execute button', () => {
     render(Page);
-    expect(screen.getByText('Execute')).toBeInTheDocument();
-  });
-
-  test('saves code to local storage', async () => {
-    render(Page);
-    const saveButton = screen.getByText('Save');
-    fireEvent.click(saveButton);
-
-    // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('python_code');
-    expect(savedCode).not.toBeNull();
-    expect(savedCode).toBe(''); // Assuming the initial code is an empty string
+    expect(screen.getByText('▶ Run')).toBeInTheDocument();
   });
 
   test('loads code from local storage', async () => {
-    localStorage.setItem('python_code', 'print("Hello, World!")');  
+    localStorage.setItem('tabs_data', '{"Model.py":"print(\\"model file\\")","Model.prism":"print(\\"prism file\\")"}');  
     render(Page);
     // Wait for the editor to be initialized
     await screen.findByText("Model Playground"); // Ensures the component is fully mounted
     // Get the CodeMirror editor
     const editorElement = document.querySelector('.code-editor');
     // Ensure the editor contains the expected text
-    expect(editorElement.textContent).toContain('print("Hello, World!")');
+    expect(editorElement.textContent).toContain('print("model file")');
+
+    // Check if the prism file is also loaded
+    fireEvent.click(screen.getByText('Model.prism'));
+    expect(editorElement.textContent).toContain('print("prism file")');
   });
 
   test('saves non-empty code to local storage', async () => {
@@ -91,8 +84,8 @@ describe('Page Component', () => {
     fireEvent.click(saveButton);
 
     // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('python_code');
-    expect(savedCode).toBe('print("Hello, World!")');
+    const savedCode = localStorage.getItem('tabs_data');
+    expect(savedCode).toBe('{"Model.py":"print(\\"Hello, World!\\")","Model.prism":""}'); // Assuming the initial code is an empty string
   });
 
   test('saves empty code to local storage', async () => {
@@ -104,36 +97,51 @@ describe('Page Component', () => {
     fireEvent.click(saveButton);
 
     // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('python_code');
-    expect(savedCode).toBe('');
+    const savedCode = localStorage.getItem('tabs_data');
+    expect(savedCode).toBe('{"Model.py":"","Model.prism":""}');
   });
 
   test('executes code and displays output', async () => {
-    // Mock fetch using Vitest (so always send hello world)
-    vi.stubGlobal('fetch', vi.fn(() =>
+    // Mock fetch for this test
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         json: () => Promise.resolve({
-          output_html: '', 
+          status: 'success',
+          output_html: '',
           output_non_html: 'Hello, World!',
-          message: null
+          message: null,
         }),
       })
-    ));
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
     render(Page);
-  
+
     // Simulate entering code in the CodeMirror editor
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
-  
+
     // Click the execute button
-    const executeButton = screen.getByText('Execute');
+    const executeButton = screen.getByText('▶ Run');
     fireEvent.click(executeButton);
-  
+
     // Wait for the output to appear
     await waitFor(() => {
       expect(screen.getByText('Hello, World!')).toBeInTheDocument();
     });
-    
+
+    // Ensure fetch was called with the correct arguments
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:5000/execute',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'print("Hello, World!")' }),
+      })
+    );
+
+    // Restore the global fetch after the test
+    vi.restoreAllMocks();
   });
 
   test('lints code and displays errors', async () => {

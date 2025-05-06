@@ -7,6 +7,7 @@
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
   import { parseLintErrors } from '../utils';
+  import JSZip from "jszip"; // Import JSZip for creating zip files
 
   let code = "";
   let specification = 'Calculate probability from start to end';
@@ -19,38 +20,57 @@
   let isExecuting = false;
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
+  let activeTab = "Model.py"; // Track the active tab  
+  let tabs = {
+      "Model.py": "",
+      "Model.prism": "",
+    };
 
-  // Save code to local storage
-    function saveCode() {
-        const code = editor.state.doc.toString(); // Get the code from the editor
-        try { // Try to save the code
-          localStorage.setItem("python_code",code); // Save for a number of days
-          saveStatus = 'saved';
-          saveToast = true;
-          setTimeout(() => { // After 2 seconds set saveStatus back to default
-            saveStatus = 'idle'
-          }, 2000);
-          setTimeout(() => { // After 3 seconds set saveToast to false so it fades away
-            saveToast = false
-          }, 3000);
-        } catch (error) { // If there are errors while saving, output it to the console
-          console.error("Failed to save code: ", error);
-          alert("Error, unable to save code.");
-      }
+  // Save all tabs to local storage
+  function saveCode() {
+    try {
+      // Update the active tab's content in the tabs object
+      tabs[activeTab] = editor.state.doc.toString();
+      const tabsData = JSON.stringify(tabs); // Convert the tabs object to JSON
+      localStorage.setItem("tabs_data", tabsData); // Save the JSON string to local storage
+      saveStatus = 'saved';
+      saveToast = true;
+      setTimeout(() => { // After 2 seconds set saveStatus back to default
+        saveStatus = 'idle';
+      }, 2000);
+      setTimeout(() => { // After 3 seconds set saveToast to false so it fades away
+        saveToast = false;
+      }, 3000);
+    } catch (error) { // If there are errors while saving, output it to the console
+      console.error("Failed to save tabs: ", error);
+      alert("Error, unable to save tabs.");
+    }
+  }
+
+  function exportCode() {
+    
+    const zip = new JSZip(); // Create a new zip instance
+    const now = new Date();
+    // Format date as dd-mm-yyyy
+    const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`; 
+    console.log("Date: ", date);
+    var folder = zip.folder(`stormvogel-playground-${date}`); // Create a folder in the zip with the date in the name
+
+    // Add each tab's content to the folder in the zip
+    for (const [fileName, fileContent] of Object.entries(tabs)) {
+      folder.file(fileName, fileContent);
     }
 
-    function exportCode() {
-      const code = editor.state.doc.toString(); // Get the code from the editor
-      
-      const blob = new Blob([code], { type: "text/plain "}); // Create a Blob object with the code
-      const a = document.createElement("a"); // Create a link element
-      a.href = URL.createObjectURL(blob); // Set the URL pointing to Blob
-      a.download = "stormvogel_playground.py" // Set the default filename
-
-      document.body.appendChild(a); // Add the link element to the DOM
-      a.click() // 'Click' the download link
-      document.body.removeChild(a); // After the download has been initiated remove the link element
-    }
+    // Generate the zip file and trigger download
+    zip.generateAsync({ type: "blob" }).then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `stormvogel-playground-${date}.zip`; // Set the name of the zip file
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  }
 
     // Adds code editor with syntax highlighting
     function createEditor() {
@@ -62,21 +82,97 @@
         });
     }
 
-    onMount(() => {
-        // Load code from local storage
-        window.addEventListener("beforeunload", function () {
-            saveCode();
-            stopExecution();
+    function switchTab(tabName) {
+      // Save the current tab's content before switching
+      tabs[activeTab] = editor.state.doc.toString();
+      if (activeTab !== tabName) {
+        activeTab = tabName;
+        code = tabs[activeTab]; // Load the selected tab's content
+        editor.dispatch({
+          changes: { from: 0, to: editor.state.doc.length, insert: code },
         });
-        const savedCode = localStorage.getItem("python_code");
-        if (savedCode) {
-            code = savedCode;
+      }
+    }
+
+    function closeTab(tabName) {
+      if (Object.keys(tabs).length > 1) {
+        const updatedTabs = { ...tabs }; // Create a copy of the tabs object
+        delete updatedTabs[tabName]; // Remove the tab
+        tabs = updatedTabs; // Update the tabs object
+  
+        if (activeTab === tabName) {
+          activeTab = Object.keys(tabs)[0]; // Switch to the first available tab
+          code = tabs[activeTab]; // Update the editor content
+          editor.dispatch({
+            changes: { from: 0, to: editor.state.doc.length, insert: code }
+          });
         }
-        
-        // Load the editor
-        createEditor();
-        startupBackend(); 
+      } else {
+        alert("At least one tab must remain open.");
+      }
+    }
+
+    function addTab() {
+      let newTabIndex = 1;
+      while (tabs[`Tab ${newTabIndex}`] !== undefined) {
+        newTabIndex++; // Find the next available unique tab name
+      }
+      const newTabName = `Tab ${newTabIndex}`;
+      tabs = { ...tabs, [newTabName]: "" }; 
+      activeTab = newTabName; // Set the new tab as active
+      code = tabs[activeTab]; // Update the editor content
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: code }
+      });
+    }
+
+    function renameActiveTab() {
+      const newTabName = prompt("Enter new name for the active tab:", activeTab);
+      if (newTabName && newTabName !== activeTab && !tabs[newTabName]) {
+        const updatedTabs = { ...tabs };
+        updatedTabs[newTabName] = updatedTabs[activeTab];
+        delete updatedTabs[activeTab];
+        tabs = updatedTabs;
+        activeTab = newTabName;
+      } else if (tabs[newTabName]) {
+        alert("A tab with this name already exists.");
+      }
+    }
+
+    // Enable horizontal scrolling with the mouse wheel
+    function tabScrollHandler() {
+      const tabContainer = document.querySelector(".tab-container");
+      if (tabContainer) {
+        tabContainer.addEventListener("wheel", (event) => {
+          if (event.deltaY !== 0) {
+            event.preventDefault();
+            tabContainer.scrollLeft += event.deltaY;
+          }
+        });
+      }
+    }
+
+    function getTabData() {
+      const savedTabs = localStorage.getItem("tabs_data");
+      if (savedTabs) {
+        tabs = JSON.parse(savedTabs); // Parse the JSON string back into an object
+        activeTab = Object.keys(tabs)[0]; // Set the first tab as active
+        code = tabs[activeTab]; // Load the content of the active tab
+      }
+    }
+
+    onMount(() => {
+    // Load tabs from local storage
+    window.addEventListener("beforeunload", function () {
+      saveCode();
+      stopExecution();
     });
+
+    getTabData();   // Load the tabs from local storage
+    createEditor(); // Load the editor
+    startupBackend();
+    tabScrollHandler();
+  });
 
     onDestroy(() => {
         window.removeEventListener("beforeunload", function () {
@@ -84,7 +180,6 @@
             stopExecution();
         });
     });
-
 
   async function startupBackend() {
     try {
@@ -108,8 +203,42 @@
     }
   }  
 
+  async function saveTabs() {
+    try {
+        const response = await fetch('http://localhost:5000/save-tabs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tabs }),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+        if (result.status !== 'success') {
+            console.error('Error saving tabs:', result.message);
+            alert('Error saving tabs: ' + result.message);
+            return false;
+        }
+
+        console.log('Tabs saved successfully in the container.');
+        return true;
+    } catch (e) {
+        console.error('Failed to save tabs to container:', e);
+        return false;
+    }
+}
+
   async function executeCode() {
     isExecuting = true;
+    // Save all tabs to the container before execution
+    const tabsSaved = await saveTabs();
+    if (!tabsSaved) {
+        isExecuting = false;
+        return;
+    }
+
+    // Execute the active tab's code
     const code = editor.state.doc.toString();
     try {
       const response = await fetch('http://localhost:5000/execute', {
@@ -223,13 +352,71 @@
   <div class="main-content">
     <div class="code-panel">
       <div class="editor-header">
-        <span class="file-tab active">model.py</span>
-        <button on:click={executeCode} class="nav-btn" disabled={isExecuting}>
+        <div class="tab-container">
+          {#each Object.keys(tabs) as tabName}
+              <div
+                  class="tab {activeTab === tabName ? 'active' : ''}"
+                  role="button"
+                  tabindex="0"
+                  data-tab-name={tabName}
+                  on:click={() => {
+                    if (activeTab === tabName) {
+                      renameActiveTab();
+                    } else {
+                      switchTab(tabName);
+                    }
+                  }}
+                  on:keydown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (activeTab === tabName) {
+                        renameActiveTab();
+                      } else {
+                        switchTab(tabName);
+                      }
+                    }
+                  }}
+              >
+                  {tabName}
+                  {#if activeTab === tabName}
+                      <button
+                          type="button"
+                          class="close-tab"
+                          on:click={(e) => {
+                              e.stopPropagation();
+                              closeTab(tabName);
+                          }}
+                          on:keydown={(e) => {
+                              if (
+                                  e.key === "Enter" ||
+                                  e.key === " "
+                              ) {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  closeTab(tabName);
+                              }
+                          }}
+                      >
+                        ×
+                      </button>
+                  {/if}
+              </div>
+          {/each}
+
+          <button type="button" class="tab add-tab" on:click={addTab}
+              >+</button
+          >
+      </div>
+        <button 
+          on:click={executeCode} 
+          class="nav-btn" 
+          style={isExecuting ? "background: oklch(93.2% 0.032 255.585);" : ""}
+        >
           <span class="button-content">
             {#if isExecuting}
               <img src="/progress.svg" alt="Executing..." class="progress-icon" />
             {:else}
-              Execute
+              <span>▶ Run</span>
             {/if}
           </span>
         </button>
@@ -261,8 +448,8 @@
       class="spec-input"
     />
     <div class="controls">
-      <button on:click={checkSpecification} class="action-btn">Analyze</button>
-      <button on:click={simulate} class="action-btn">Simulate</button>
+      <button on:click={checkSpecification} class="nav-btn">Analyze</button>
+      <button on:click={simulate} class="nav-btn">Simulate</button>
     </div>
   </div>
 
@@ -309,23 +496,6 @@
     display: flex;
   }
 
-  .nav-btn {
-    background: #e6f0ff;
-    color: #007acc;
-    border: 1px solid #b3d1ff;
-    padding: 8px 16px;
-    margin-left: 1rem;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s;
-    display: flex;
-    align-items: center;
-  }
-
-  .nav-btn:hover {
-    background: #d0e0ff;
-  }
-
   .button-content {
     display: flex;
     align-items: center;
@@ -362,21 +532,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #eaeaea;
-    padding: 8px 16px;
+    background: oklch(88.2% 0.059 254.128);
+    padding: 4px 16px;
     border-bottom: 1px solid #ddd;
-  }
-
-  .file-tab {
-    padding: 6px 12px;
-    background: #fff;
-    border-radius: 4px 4px 0 0;
-    border: 1px solid #ddd;
-  }
-
-  .file-tab.active {
-    border-bottom: 2px solid #007acc;
-    font-weight: bold;
   }
 
   .code-editor {
@@ -435,20 +593,6 @@
     border-radius: 4px;
   }
 
-  .action-btn {
-    background: #007acc;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s;
-  }
-
-  .action-btn:hover {
-    background: #005fa3;
-  }
-
   .save-toast {
     position: fixed;
     bottom: 70px;
@@ -460,4 +604,87 @@
     border-radius: 5px;
     opacity: 0.9;
   }
+
+  .tab-container {
+        margin-left: -12px;
+        display: flex;
+        background: oklch(93.2% 0.032 255.585); 
+        padding: 4px;
+        border-radius: 5px;
+        position: relative;
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        scrollbar-color: oklch(88.2% 0.059 254.128) transparent;
+        margin-bottom: 0px;
+    }
+
+    .tab {
+        padding: 6px 1rem;
+        background: oklch(97% 0.014 254.604); /* Light background */
+        border: 2px solid #d0e1f9; /* Subtle border */
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        font-size: 1rem;
+        color: rgb(80, 80, 80);
+        position: relative;
+        z-index: 0;
+    }
+
+    .tab.active {
+        background: white;
+        z-index: 1;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        color: #000;
+        border: none;
+    }
+
+    .tab:hover:not(.active) {
+        background-color: #c7ddff; /* Light blue on hover */
+        border-color: oklch(62.3% 0.214 259.815);
+    }
+
+  .close-tab {
+    margin-left: 2px;   /* optional slight left spacing */
+    margin-right: -8px; /* shift the button a bit into the rounded edge */
+    font-size: 1rem;
+    color: rgb(102, 102, 102);
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    width: 24px;  /* Set a fixed width  for the round button */
+    height: 24px; /* Set a fixed height for the round button */
+    border-radius: 50%;    /* Make it round */
+    background: #f0f0f0; /* Light background */
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .close-tab:hover {
+    background: #cecece; /* Slightly darker background on hover */
+  }
+
+.nav-btn {
+  background: oklch(55.7% 0.165 254.624);
+  color: #fff;
+  border: none;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 0 4px;
+  cursor: pointer;
+  border-radius: 5px; /* Rounded pills */
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.nav-btn:hover {
+  background: oklch(93.2% 0.032 255.585);
+  color: oklch(40.7% 0.165 254.624);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 </style>
