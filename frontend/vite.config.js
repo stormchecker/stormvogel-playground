@@ -13,7 +13,9 @@ export default defineConfig({
 		reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
 		coverage: {
 			include: ['src/**/*.{js,svelte}'],
-			exclude: ['**/node_modules/**', '**/tests-vitest/**', '**/tests-playwright/**']
+			exclude: ['**/node_modules/**', '**/tests-vitest/**', '**/tests-playwright/**'],
+			reportsDirectory: './coverage',
+            reportOnFailure: true,
 		}
 	},
   resolve: process.env.VITEST

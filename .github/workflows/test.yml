@@ -5,10 +5,12 @@ on:
     branches:
       - main, 
       - dev, 
+      - feature/arthur/automate-testing,
   pull_request:
     branches:
       - main, 
       - dev, 
+      - feature/arthur/automate-testing
 
 jobs:
   test:
@@ -28,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm install
         working-directory: ./frontend
-
+        
       - name: Run tests with coverage
         run: npm run coverage
         working-directory: ./frontend
@@ -38,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: frontend/coverage/
+          path: ./frontend/coverage/
