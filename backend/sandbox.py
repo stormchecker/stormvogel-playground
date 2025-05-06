@@ -178,14 +178,6 @@ def save_tabs(user_id, tabs):
         # Transfer the tar archive to the container, save it in the same directory as the script
         if container.put_archive("/app", tarstream):
             logger.debug(f"Tabs saved successfully in container {container_name}")
-
-            # Print the location of the tabs files
-            logger.debug(f"Root directory contents:\n{container.exec_run("ls -l /app").output.decode()}")
-
-            # Log the contents of each tab file
-            for tab_name in tabs.keys():
-                logger.debug(f"Contents of {tab_name}:\n{container.exec_run(f'cat "/app/{tab_name}"').output.decode()}")
-
             return {"status": "success", "message": "Tabs saved successfully"}
         else:
             logger.error(f"Failed to save tabs in container {container_name}")

@@ -114,10 +114,10 @@
 
     function addTab() {
       let newTabIndex = 1;
-      while (tabs[`Tab ${newTabIndex}`] !== undefined) {
+      while (tabs[`Tab ${newTabIndex}.py`] !== undefined) {
         newTabIndex++; // Find the next available unique tab name
       }
-      const newTabName = `Tab ${newTabIndex}`;
+      const newTabName = `Tab ${newTabIndex}.py`;
       tabs = { ...tabs, [newTabName]: "" }; 
       activeTab = newTabName; // Set the new tab as active
       code = tabs[activeTab]; // Update the editor content
