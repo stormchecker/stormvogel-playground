@@ -100,3 +100,8 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# start.sh and Dockerfile
+start.sh
+Dockerfile
+

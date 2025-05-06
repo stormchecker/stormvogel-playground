@@ -74,7 +74,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'cd .. && ./start.sh',
+    command: 'cd ../backend && python3 app.py & npm run dev',
     url: 'http://localhost:5173/',
     reuseExistingServer: !process.env.CI,
   },
