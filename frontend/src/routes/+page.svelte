@@ -9,11 +9,9 @@
   import { parseLintErrors } from '../utils';
 
   let code = "";
-  let specification = 'Calculate probability from start to end';
   let output_html = "";
   let output_non_html = "";
   let error = "";
-  let simulationSteps = [];
   let editor;
   let lintErrors = [];
   let isExecuting = false;
@@ -132,9 +130,6 @@
             error = result.message || "An unknown error occurred";
         }
         
-      //output_html = result.output_html;
-      //output_non_html = result.output_non_html;
-      //error = result.message;
     } catch (e) {
       output_html = "";
       output_non_html = "";
@@ -185,17 +180,6 @@
       lintErrors = [{ from: 0, to: 0, severity: "error", message: "Failed to connect to linting server" }];
     }
     return lintErrors;
-  }
-
-  function checkSpecification() {
-    // Placeholder for actual specification checking
-    // output = "Specification analysis would go here";
-  }
-
-  function simulate() {
-    // Mock simulation
-    simulationSteps = ['start', 'active', 'end'];
-    // output = `Simulation path: ${simulationSteps.join(' → ')}`;
   }
 </script>
 
@@ -250,19 +234,6 @@
         <pre id="error" style="color: red;">{error}</pre>
         <pre id="lint-errors" style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
       </div>
-    </div>
-  </div>
-
-  <div class="specification-bar">
-    <input 
-      type="text" 
-      bind:value={specification} 
-      placeholder="Enter your query"
-      class="spec-input"
-    />
-    <div class="controls">
-      <button on:click={checkSpecification} class="action-btn">Analyze</button>
-      <button on:click={simulate} class="action-btn">Simulate</button>
     </div>
   </div>
 
@@ -416,37 +387,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: auto;
     font-family: 'Courier New', monospace;
-  }
-
-  .specification-bar {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    background: #f7f7f7;
-    border-top: 1px solid #ddd;
-  }
-
-  .spec-input {
-    flex-grow: 1;
-    padding: 8px;
-    background: #fff;
-    border: 1px solid #ccc;
-    color: #333;
-    border-radius: 4px;
-  }
-
-  .action-btn {
-    background: #007acc;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s;
-  }
-
-  .action-btn:hover {
-    background: #005fa3;
   }
 
   .save-toast {
