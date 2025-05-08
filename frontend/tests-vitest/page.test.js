@@ -50,9 +50,9 @@ afterEach(() => {
 });
 
 describe('Page Component', () => {
-  test('renders the Model Playground title', () => {
+  test('renders the Stormvogel Playground title', () => {
     render(Page);
-    expect(screen.getByText('Model Playground')).toBeInTheDocument();
+    expect(screen.getByText('Stormvogel Playground')).toBeInTheDocument();
   });
 
   test('renders the Execute button', () => {
@@ -64,7 +64,7 @@ describe('Page Component', () => {
     localStorage.setItem('tabs_data', '{"Model.py":"print(\\"model file\\")","Model.prism":"print(\\"prism file\\")"}');  
     render(Page);
     // Wait for the editor to be initialized
-    await screen.findByText("Model Playground"); // Ensures the component is fully mounted
+    await screen.findByText("Stormvogel Playground"); // Ensures the component is fully mounted
     // Get the CodeMirror editor
     const editorElement = document.querySelector('.code-editor');
     // Ensure the editor contains the expected text

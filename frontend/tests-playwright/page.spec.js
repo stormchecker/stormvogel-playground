@@ -6,10 +6,10 @@ test('Loads the page and checks initial elements', async ({ page }) => {
   await page.goto('/'); // Adjust the URL to your local server
 
   // Check if the title is correct
-  await expect(page).toHaveTitle('Model Playground');
+  await expect(page).toHaveTitle('Stormvogel Playground');
 
   // Check if the header is visible
-  await expect(page.locator('header h1')).toHaveText('Model Playground');
+  await expect(page.locator('header h1')).toHaveText('Stormvogel Playground');
 
   // Check if the save button is present
   await expect(page.locator('button', { hasText: 'Save' })).toBeVisible();
@@ -63,7 +63,7 @@ test('Save code functionality with multiple tabs', async ({ page }) => {
   // Check if all tabs are saved in localStorage
   const savedTabs = await page.evaluate(() => JSON.parse(localStorage.getItem('tabs_data')));
   expect(savedTabs['Model.py']).toBe('print("Code in Model.py")');
-  expect(savedTabs['Tab 1']).toBe('print("Code in Tab 1")');
+  expect(savedTabs['Tab 1.py']).toBe('print("Code in Tab 1")');
 });
 
 test('Execute Python code and check output', async ({ page }) => {
