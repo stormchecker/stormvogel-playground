@@ -17,7 +17,7 @@ Creates session and starts sandbox for user
 is called from svelte post request: 
     in startup function in script (+page_svelte)
 '''
-@app.route('/startup', methods=['POST'])
+@app.route('/api/startup', methods=['POST'])
 def create_session():
     data = request.json
 
@@ -33,7 +33,7 @@ Lints the provided code using Ruff
 is called from svelte post request:
     lintCode function in +page.svelte
 '''
-@app.route('/lint', methods=['POST'])
+@app.route('/api/lint', methods=['POST'])
 def lint_code():
     code = request.json.get("code")
     if not code:
@@ -60,7 +60,7 @@ is called fron svelte post request:
     executeCode function in +page.svelte 
     (which intern is called by pressing the execute button)
 '''
-@app.route('/execute', methods=['POST'])
+@app.route('/api/execute', methods=['POST'])
 def execute_code():
     # Svelte doesn't sent {"code" : "<python code>"} but {"<python code>"}, but doesn't matter.
     data = request.json
@@ -78,7 +78,7 @@ is called from svelte post request:
     TODO: use onDestroy in svelte frontend
           use visibilitychange event to signal closed tabs or switch tabs -> maybe close sandbox then
 '''
-@app.route('/stop', methods=['POST'])
+@app.route('/api/stop', methods=['POST'])
 def stop_sandbox():
     if "user_id" in session:
         sandbox.stop_sandbox(session["user_id"])

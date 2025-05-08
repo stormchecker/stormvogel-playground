@@ -7,10 +7,10 @@ export default defineConfig({
     server: { //proxy to avoid cross origin, this way relative addresses are proxied to backend so it looks same origin to the backend
         //only relavant for npm run dev, deployment uses nginx as a proxy wich will act like same origin
         proxy: {
-            '/startup': 'http://localhost:5000',
-            '/lint': 'http://localhost:5000',
-            '/execute': 'http://localhost:5000',
-            '/stop': `http://localhost:5000`
+            '/api/startup': 'http://localhost:5000',
+            '/api/lint': 'http://localhost:5000',
+            '/api/execute': 'http://localhost:5000',
+            '/api/stop': `http://localhost:5000`
         }
     },
     test: {
