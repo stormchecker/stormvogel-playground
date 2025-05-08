@@ -17,12 +17,11 @@ project-root/
 ├── frontend/       # Svelte frontend
 │   ├── src/        # Component source code
 │   └── ...         # Other frontend files
-└── Dockerfile      # Dockerfile with the stormvogel playground
 ```
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Development Setup Instructions
 
 ### **Backend Setup (Flask)**
 1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
@@ -32,17 +31,9 @@ project-root/
    docker pull stormvogel/stormvogel
    ```
 
-2. Install flask and library for .env:
+2. Install backend dependencies (probably want to use a pip or conda environment):
     ```bash
-    pip install flask
-    pip install flask_cors
-    pip install python-dotenv
-    ```
-
-3. Install python docker api:
-    ```bash
-    pip install docker
-    ```
+    pip install requirements.txt
 
 ### **Frontend Setup (Svelte)**
 1. Install flask:
@@ -54,13 +45,13 @@ project-root/
 ### **Running backend (Flask)**
 1. in backend folder:
     ```bash
-    sudo python3 app.py
+    gunicorn --timeout 70 --bind 127.0.0.1:5000
     ```
 
 ### **Running frontend (Svelte)**
 1. in frontend folder:
     ```bash
-    npm run (build/dev)
+    npm run dev
     ```
 
 ### Testing
