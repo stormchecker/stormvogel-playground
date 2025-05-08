@@ -10,11 +10,9 @@
   import JSZip from "jszip"; // Import JSZip for creating zip files
 
   let code = "";
-  let specification = 'Calculate probability from start to end';
   let output_html = "";
   let output_non_html = "";
   let error = "";
-  let simulationSteps = [];
   let editor;
   let lintErrors = [];
   let isExecuting = false;
@@ -261,9 +259,6 @@
             error = result.message || "An unknown error occurred";
         }
         
-      //output_html = result.output_html;
-      //output_non_html = result.output_non_html;
-      //error = result.message;
     } catch (e) {
       output_html = "";
       output_non_html = "";
@@ -314,17 +309,6 @@
       lintErrors = [{ from: 0, to: 0, severity: "error", message: "Failed to connect to linting server" }];
     }
     return lintErrors;
-  }
-
-  function checkSpecification() {
-    // Placeholder for actual specification checking
-    // output = "Specification analysis would go here";
-  }
-
-  function simulate() {
-    // Mock simulation
-    simulationSteps = ['start', 'active', 'end'];
-    // output = `Simulation path: ${simulationSteps.join(' → ')}`;
   }
 </script>
 
@@ -439,20 +423,6 @@
       </div>
     </div>
   </div>
-
-  <div class="specification-bar">
-    <input 
-      type="text" 
-      bind:value={specification} 
-      placeholder="Enter your query"
-      class="spec-input"
-    />
-    <div class="controls">
-      <button on:click={checkSpecification} class="nav-btn">Analyze</button>
-      <button on:click={simulate} class="nav-btn">Simulate</button>
-    </div>
-  </div>
-
   {#if saveToast}
     <div class="save-toast" transition:fade>
       The code has been saved successfully
@@ -574,23 +544,6 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: auto;
     font-family: 'Courier New', monospace;
-  }
-
-  .specification-bar {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem;
-    background: #f7f7f7;
-    border-top: 1px solid #ddd;
-  }
-
-  .spec-input {
-    flex-grow: 1;
-    padding: 8px;
-    background: #fff;
-    border: 1px solid #ccc;
-    color: #333;
-    border-radius: 4px;
   }
 
   .save-toast {
