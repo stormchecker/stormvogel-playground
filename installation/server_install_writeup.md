@@ -173,8 +173,10 @@ sudo certbot --nginx -d [domain].com
 
 ### Socket Permissions:
 
+* Set directory traversal permissions
+nginx runs on the www-data user by default.
+This user needs traversal access to the frontend and backend and also read access to the static frontend files.
 ```bash
-# Directory traversal permissions
 chmod o+x /home/serverhost0
 chmod o+x /home/serverhost0/Stormvogel-2025
 chmod o+x /home/serverhost0/Stormvogel-2025/backend
@@ -274,15 +276,25 @@ sudo rm /etc/nginx/sites-enabled/default
 
 ## Step 5: running the server
 
-* nginx config is enables we can now do the run the server
+* nginx config is enabled we can now do the run the server
 * Bind app process to a unix socket using gunicorn (in backend directory):
-* Give nginx permission 
-* Run nginx
+```bash
+gunicorn <optional: --timeout 60> --bind unix:/home/serverhost0/Stormvogel-2025/backend/gunicorn.sock app:app"
+```
 
-* This is done by running the `start_server.sh`
+* Give nginx permission 
+```bash
+chmod 660 /home/serverhost0/Stormvogel-2025/backend/gunicorn.sock
+chown serverhost0:www-data /home/serverhost0/Stormvogel-2025/backend/gunicorn.sock
+```
+
+* Restart nginx
+```bash
+sudo systemctl restart nginx
+```
 
 * Access app via `https://[domain].com` (if using HTTPS)
-* Or via `http://[server_ip]`           (if using HTTP only)
+* Or via `http://[server_ip/domain]`    (if using HTTP)
 
 * if not working check server firewall:
 ```bash
