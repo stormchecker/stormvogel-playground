@@ -109,31 +109,46 @@ describe('Page Component', () => {
   });
 
   test('executes code and displays output', async () => {
-    // Mock fetch using Vitest (so always send hello world)
-    vi.stubGlobal('fetch', vi.fn(() =>
+    // Mock fetch for this test
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         json: () => Promise.resolve({
-          output_html: '', 
+          status: 'success',
+          output_html: '',
           output_non_html: 'Hello, World!',
-          message: null
+          message: null,
         }),
       })
-    ));
+    );
+    vi.stubGlobal('fetch', mockFetch);
+
     render(Page);
-  
+
     // Simulate entering code in the CodeMirror editor
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
-  
+
     // Click the execute button
     const executeButton = screen.getByText('Execute');
     fireEvent.click(executeButton);
-  
+
     // Wait for the output to appear
     await waitFor(() => {
       expect(screen.getByText('Hello, World!')).toBeInTheDocument();
     });
-    
+
+    // Ensure fetch was called with the correct arguments
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:5000/execute',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: 'print("Hello, World!")' }),
+      })
+    );
+
+    // Restore the global fetch after the test
+    vi.restoreAllMocks();
   });
 
   test('lints code and displays errors', async () => {
