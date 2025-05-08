@@ -1,0 +1,94 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master, dev ]
+
+jobs:
+  test:
+    timeout-minutes: 8
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js (with cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+        working-directory: ./frontend
+
+        # Docker installation and setup steps
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl gnupg lsb-release
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      - name: Install gVisor
+        run: |
+          ARCH=$(uname -m)
+          URL=https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}
+          wget ${URL}/runsc ${URL}/runsc.sha512 \
+            ${URL}/containerd-shim-runsc-v1 ${URL}/containerd-shim-runsc-v1.sha512
+          sha512sum -c runsc.sha512 \
+            -c containerd-shim-runsc-v1.sha512
+          rm -f *.sha512
+          chmod a+rx runsc containerd-shim-runsc-v1
+          sudo mv runsc containerd-shim-runsc-v1 /usr/local/bin/
+          
+      - name: Configure Docker to use gVisor
+        run: |
+          echo '{"runtimes": {"runsc": {"path": "/usr/local/bin/runsc"}}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl daemon-reload
+          sudo systemctl restart docker
+
+      - name: Start Docker service
+        run: sudo systemctl start docker
+      
+      - name: Load or Pull Docker Image
+        run: |
+            echo "Downloading stormvogel image..."
+            docker pull stormvogel/stormvogel
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        working-directory: ./frontend
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+

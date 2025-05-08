@@ -10,9 +10,12 @@ export default defineConfig({
 		setupFiles: './vitest.setup.js',
 		exclude: ['**/node_modules/**', '**/tests-playwright/**'],
 		include: ['**/tests-vitest/**'],
+		reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
 		coverage: {
 			include: ['src/**/*.{js,svelte}'],
-			exclude: ['**/node_modules/**', '**/tests-vitest/**', '**/tests-playwright/**']
+			exclude: ['**/node_modules/**', '**/tests-vitest/**', '**/tests-playwright/**'],
+			reportsDirectory: './coverage',
+            reportOnFailure: true,
 		}
 	},
   resolve: process.env.VITEST
