@@ -54,7 +54,6 @@ def lint_code():
         print(f"Linting failed: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
 '''
 Does arbitrary code execution in user sandbox
 is called fron svelte post request: 

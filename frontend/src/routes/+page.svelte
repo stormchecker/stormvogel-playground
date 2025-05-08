@@ -86,7 +86,7 @@
 
   async function startupBackend() {
     try {
-        const response = await fetch('http://localhost:5000/startup', {
+        const response = await fetch('/startup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -110,7 +110,7 @@
     isExecuting = true;
     const code = editor.state.doc.toString();
     try {
-      const response = await fetch('http://localhost:5000/execute', {
+      const response = await fetch('/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -141,7 +141,7 @@
 
   async function stopExecution() {
       try {
-          const response = await fetch('http://localhost:5000/stop', {
+          const response = await fetch('/stop', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'
@@ -159,7 +159,7 @@
   async function lintCode(view) {
     const code = view.state.doc.toString();
     try {
-      const response = await fetch('http://localhost:5000/lint', {
+      const response = await fetch('/lint', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
