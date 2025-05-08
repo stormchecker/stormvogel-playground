@@ -97,3 +97,6 @@ staticfiles/
 # start.sh and Dockerfile
 start.sh
 Dockerfile
+
+# personal
+login.txt
