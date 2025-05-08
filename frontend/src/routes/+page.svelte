@@ -48,7 +48,7 @@
   }
 
   function exportCode() {
-    
+    tabs[activeTab] = editor.state.doc.toString(); // Update the active tab's content in the tabs object
     const zip = new JSZip(); // Create a new zip instance
     const now = new Date();
     // Format date as dd-mm-yyyy
@@ -329,12 +329,12 @@
 </script>
 
 <svelte:head>
-  <title>Model Playground</title>
+  <title>Stormvogel Playground</title>
 </svelte:head>
 
 <div class="container">
   <header>
-    <h1>Model Playground</h1>
+    <h1>Stormvogel Playground</h1>
     <nav>
       <button class="nav-btn">Examples</button>
       <button on:click={saveCode}

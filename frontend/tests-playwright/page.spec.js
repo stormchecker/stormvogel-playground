@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import JSZip from 'jszip';
+import fs from 'fs';
 
 test('Loads the page and checks initial elements', async ({ page }) => {
   await page.goto('/'); // Adjust the URL to your local server
@@ -249,3 +251,96 @@ test('Test user inputs code with various syntax errors', async ({ page }) => {
   await expect(lintErrors).toContainText('Expected \',\', found name (line 3, col 1)');
   await expect(lintErrors).toContainText('unexpected EOF while parsing (line 4, col 1)');
 });
+
+test('Import prism file from different tab', async ({ page }) => {
+  await page.goto('/');
+
+  // Locate the CodeMirror editor and input Python code
+  const editor = page.locator('.cm-content');
+  await editor.click();
+  await editor.fill(`import stormpy
+
+def example_prism():
+    prism_program = stormpy.parse_prism_program("Model.prism")
+
+    model = stormpy.build_model(prism_program)
+    print("Number of states: {}".format(model.nr_states))
+    print("Number of transitions: {}".format(model.nr_transitions))
+
+if __name__ == "__main__":
+    example_prism()`);
+  
+  // Locate the CodeMirror editor and input Prism code
+  await page.locator('.tab', { hasText: 'Model.prism' }).click();
+  await editor.click();
+  await editor.fill(`dtmc
+
+module die
+    // The integers 0..7 represent our states, and 0 is the initial state.
+    s : [0..7] init 0;
+    // From s=0, we can go to 1,2,3,4,5,6 with 1/6th probability.
+    // The + sign can be interpreted as an 'or'
+    // Note that this is similar to our delta function.
+    [] s=0 -> 1/6 : (s'=1) +
+                1/6: (s'=2) +
+                1/6: (s'=3) +
+                1/6: (s'=4) +
+                1/6: (s'=5) +
+                1/6: (s'=6);
+    // Self loops
+    [] s>0 -> (s'=s);
+endmodule
+
+// Add the desired labels
+label "rolled1" = s=1;
+label "rolled2" = s=2;
+label "rolled3" = s=3;
+label "rolled4" = s=4;
+label "rolled5" = s=5;
+label "rolled6" = s=6;`);
+
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
+
+  await page.waitForTimeout(1000); 
+  // Click the execute button
+  await page.locator('button', { hasText: '▶ Run' }).click();
+
+  // Wait for the output to appear
+  const outputLocator = page.locator('#output-non-html'); // Check the output
+  await expect(outputLocator).toHaveText(`Number of states: 7
+Number of transitions: 12`);
+});
+
+test('Export tabs functionality', async ({ page }) => {
+  await page.goto('/');
+
+  // Add code to the first tab
+  await page.locator('.tab', { hasText: 'Model.py' }).click();
+  const editor = page.locator('.cm-content');
+  await editor.click();
+  await editor.fill('print("Code in Model.py")');
+
+  // Add code to the second tab
+  await page.locator('button.add-tab').click();
+  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await editor.click();
+  await editor.fill('print("Code in Tab 1")');
+
+  // Mock the download action
+  const [download] = await Promise.all([
+    page.waitForEvent('download'), // Wait for the download event
+    page.locator('button', { hasText: 'Export' }).click(), // Trigger the export
+  ]);
+
+  // Save the downloaded file to a temporary path
+  const path = await download.path();
+
+  // Verify the contents of the downloaded zip file
+  const zipContent = fs.readFileSync(path);
+  const zip = await JSZip.loadAsync(zipContent);
+
+  // Check if the zip contains the expected files using regex
+  expect(Object.keys(zip.files).some(file => /stormvogel-playground-\d{2}-\d{2}-\d{4}\/Model\.py/.test(file))).toBe(true);
+  expect(Object.keys(zip.files).some(file => /stormvogel-playground-\d{2}-\d{2}-\d{4}\/Tab 1\.py/.test(file))).toBe(true);
+});
+
