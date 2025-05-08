@@ -21,9 +21,17 @@ project-root/
 
 ---
 
+## 🚀 Deployment Setup Instructions
+* See `server_installation_writeup.md`
+
+---
+
 ## 🚀 Development Setup Instructions
 
 ### **Backend Setup (Flask)**
+
+> **Note:** For detailed steps you can also look into `server_installation_writeup` in particular Step 1 and Step 2 
+
 1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
    also install Gvisor: https://gvisor.dev/docs/user_guide/install/
    To get the docker image we now only need to call this :
@@ -45,7 +53,8 @@ project-root/
 ### **Running backend (Flask)**
 1. in backend folder:
     ```bash
-    gunicorn --timeout 70 --bind 127.0.0.1:5000
+    python3 app.py <in-backend-folder>
+    gunicorn --timeout 70 --bind 127.0.0.1:5000 (can also be used but does not set debug flag)
     ```
 
 ### **Running frontend (Svelte)**

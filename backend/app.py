@@ -86,7 +86,6 @@ def stop_sandbox():
         return jsonify({"status": "success", "message": "Sandbox stopped"})
     return jsonify({"status": "error", "message": "No active session"}), 400
 
-# Call python3 app.py --debug for dev backend
-# Problems with passing arguments in my current setup, so hardcoded debug mode :|
+#Only used for development, deployment uses gunicorn which ignores this
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5000)
