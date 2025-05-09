@@ -53,5 +53,5 @@ def test_execute_code_timeout(real_container):
 
 def test_execute_code_crash(real_container):
     result = execute_code(USER_ID, "1/0")
-    assert result["status"] == "success"
+    assert result["status"] == "error"
     assert "ZeroDivisionError" in result["output_non_html"] or "Execution failed" in result["output_non_html"]
