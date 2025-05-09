@@ -7,6 +7,7 @@
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
   import { parseLintErrors } from '../utils';
+  import { examples } from  '../examples.js';
 
   let code = "";
   let output_html = "";
@@ -17,6 +18,8 @@
   let isExecuting = false;
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
+  let dropdownOpen = false;
+  const githubUrl = 'https://github.com/moves-rwth/stormvogel';
 
   // Save code to local storage
     function saveCode() {
@@ -58,6 +61,20 @@
             extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
             parent: document.querySelector(".code-editor"),
         });
+    }
+
+    function loadExample(exampleTitle) {
+      const example = examples.find(e => e.title === exampleTitle);
+      if (example) {
+        editor.dispatch({
+          changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: example.code, //CODE PLACEHOLDER
+          }
+        })
+      dropdownOpen=false;
+      }
     }
 
     onMount(() => {
@@ -189,9 +206,31 @@
 
 <div class="container">
   <header>
-    <h1>Model Playground</h1>
+    <div class="header-left">
+      <h1>Model Playground</h1>
+      <a href={githubUrl} target="_blank" rel="noopener noreferrer">
+        <img src="../../public/github-mark.svg" alt="Github Repo" class="github-logo"/>
+      </a>
+    </div>
     <nav>
-      <button class="nav-btn">Examples</button>
+      <div class="dropdown-container">
+        <button class="nav-btn btn-examples"
+        on:click={() => dropdownOpen = !dropdownOpen}>
+        Examples
+        </button>  
+
+        {#if dropdownOpen}
+          <div class="dropdown-menu">
+            <button class="nav-btn"
+            on:click={() => loadExample('example1')}>Example 1</button>
+            <button class="nav-btn"
+            on:click={() => loadExample('example2')}>Example 2</button>
+            <button class="nav-btn"
+            on:click={() => loadExample('example3')}>Example 3</button>
+          </div>
+        {/if}
+
+      </div>
       <button on:click={saveCode}
         style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
         class="nav-btn">
@@ -289,8 +328,6 @@
     cursor: pointer;
     border-radius: 4px;
     transition: background 0.3s;
-    display: flex;
-    align-items: center;
   }
 
   .nav-btn:hover {
@@ -400,4 +437,37 @@
     border-radius: 5px;
     opacity: 0.9;
   }
+
+  .dropdown-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    min-width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  .btn-examples {
+    width: 200px;
+  }
+
+  .github-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center; 
+    gap: 20px;
+  }
+
 </style>
