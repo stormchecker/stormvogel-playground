@@ -24,10 +24,10 @@ config.py
 # Svelte project ignores (inside frontend directory)
 frontend/node_modules/
 frontend/.svelte-kit/
-frontend/package-lock.json
 frontend/dist/
 frontend/build/
 frontend/public/build/
+frontend/bin/act
 
 # Vitest project ignores
 frontend/coverage/
@@ -93,6 +93,13 @@ staticfiles/
 .env
 .env.*
 .envrc
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # start.sh and Dockerfile
 start.sh
