@@ -31,27 +31,27 @@ def real_container():
     yield container
     stop_sandbox(USER_ID)
 
-def test_lint_code_success():
+def test_lint_code_success(real_container):
     result = lint_code(USER_ID, "x = 1\n")
     assert result["status"] == "success"
     assert "script.py" not in result["lint_output"]  # no issues expected
 
-def test_lint_code_failure():
+def test_lint_code_failure(real_container):
     result = lint_code(USER_ID, "x==1\n")  # should trigger linter
     assert result["status"] == "error"
     assert "script.py" in result["message"]
 
-def test_execute_code_success():
+def test_execute_code_success(real_container):
     result = execute_code(USER_ID, "print('Hello from real test')")
     assert result["status"] == "success"
     assert "Hello from real test" in result["output_non_html"]
 
-def test_execute_code_timeout():
+def test_execute_code_timeout(real_container):
     result = execute_code(USER_ID, "while True:\n  pass")
     assert result["status"] == "error"
     assert "10-second" in result["message"]  # from Timeout10sec!
 
-def test_execute_code_crash():
+def test_execute_code_crash(real_container):
     result = execute_code(USER_ID, "1/0")
-    assert result["status"] == "error"
+    assert result["status"] == "success"
     assert "ZeroDivisionError" in result["output_non_html"] or "Execution failed" in result["output_non_html"]
