@@ -222,7 +222,7 @@
         {#if dropdownOpen}
           <div class="dropdown-menu">
             <button class="nav-btn"
-            on:click={() => loadExample('example1')}>Example 1</button>
+            on:click={() => loadExample('example1')}>MDP Example</button>
             <button class="nav-btn"
             on:click={() => loadExample('example2')}>Example 2</button>
             <button class="nav-btn"
