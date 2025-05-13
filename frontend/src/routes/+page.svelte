@@ -23,7 +23,7 @@
   let tabs = {
       "Model.py": "",
       "Model.prism": "",
-    };
+  };
   let dropdownOpen = false; // Examples dropdown menu
   const githubUrl = 'https://github.com/moves-rwth/stormvogel';
 
@@ -92,6 +92,7 @@
         editor.dispatch({
           changes: { from: 0, to: editor.state.doc.length, insert: code },
         });
+      }
     }
 
     function loadExample(exampleTitle) {
@@ -326,6 +327,7 @@
     }
     return lintErrors;
   }
+
 </script>
 
 <svelte:head>
