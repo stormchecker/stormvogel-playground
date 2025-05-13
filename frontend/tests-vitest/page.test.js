@@ -27,14 +27,14 @@ beforeEach(() => {
 
   // Mock the fetch function
   vi.stubGlobal('fetch', vi.fn((url) => {
-    if (url.endsWith('/startup')) {
+    if (url.endsWith('/api/startup')) {
       return Promise.resolve({
         json: () => Promise.resolve({
           status: 'success',
           message: 'Succeeded in launching container'
         }),
       });
-    } else if (url.endsWith('/lint')) {
+    } else if (url.endsWith('/api/lint')) {
       return Promise.resolve({
         json: () => Promise.resolve({
           error: '/script.py:1:1: E001 Example error message'
@@ -132,7 +132,7 @@ describe('Page Component', () => {
 
     // Ensure fetch was called with the correct arguments
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:5000/execute',
+      '/api/execute',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
-        working-directory: ./
+        working-directory: ./backend
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps

@@ -105,3 +105,5 @@ node_modules/
 start.sh
 Dockerfile
 
+# personal
+login.txt

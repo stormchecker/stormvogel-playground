@@ -198,7 +198,7 @@
 
   async function startupBackend() {
     try {
-        const response = await fetch('http://localhost:5000/startup', {
+        const response = await fetch('/api/startup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -220,7 +220,7 @@
 
   async function saveTabs() {
     try {
-        const response = await fetch('http://localhost:5000/save-tabs', {
+        const response = await fetch('/api/save-tabs', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -256,7 +256,7 @@
     // Execute the active tab's code
     const code = editor.state.doc.toString();
     try {
-      const response = await fetch('http://localhost:5000/execute', {
+      const response = await fetch('/api/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -287,7 +287,7 @@
 
   async function stopExecution() {
       try {
-          const response = await fetch('http://localhost:5000/stop', {
+          const response = await fetch('/api/stop', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'
@@ -305,7 +305,7 @@
   async function lintCode(view) {
     const code = view.state.doc.toString();
     try {
-      const response = await fetch('http://localhost:5000/lint', {
+      const response = await fetch('/api/lint', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
