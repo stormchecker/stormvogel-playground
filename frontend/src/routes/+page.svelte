@@ -8,6 +8,7 @@
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
   import { parseLintErrors } from '../utils';
   import JSZip from "jszip"; // Import JSZip for creating zip files
+  import { examples } from  '../examples.js';
 
   let code = "";
   let output_html = "";
@@ -23,6 +24,8 @@
       "Model.py": "",
       "Model.prism": "",
     };
+  let dropdownOpen = false; // Examples dropdown menu
+  const githubUrl = 'https://github.com/moves-rwth/stormvogel';
 
   // Save all tabs to local storage
   function saveCode() {
@@ -88,7 +91,26 @@
         code = tabs[activeTab]; // Load the selected tab's content
         editor.dispatch({
           changes: { from: 0, to: editor.state.doc.length, insert: code },
+          onMount(() => {
+            // Load code from local storage
+            window.addEventListener("beforeunload", function () {
+            saveCode();
+            stopExecution();
         });
+      }
+    }
+      
+    function loadExample(exampleTitle) {
+      const example = examples.find(e => e.title === exampleTitle);
+      if (example) {
+        editor.dispatch({
+          changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: example.code, // Code placeholder
+          }
+        })
+      dropdownOpen=false;
       }
     }
 
@@ -318,9 +340,31 @@
 
 <div class="container">
   <header>
-    <h1>Stormvogel Playground</h1>
+    <div class="header-left">
+      <h1>Stormvogel Playground</h1>
+      <a href={githubUrl} target="_blank" rel="noopener noreferrer">
+        <img src="../../public/github-mark.svg" alt="Github Repo" class="github-logo"/>
+      </a>
+    </div>
     <nav>
-      <button class="nav-btn">Examples</button>
+      <div class="dropdown-container">
+        <button class="nav-btn btn-examples"
+        on:click={() => dropdownOpen = !dropdownOpen}>
+        Examples
+        </button>  
+
+        {#if dropdownOpen}
+          <div class="dropdown-menu">
+            <button class="nav-btn"
+            on:click={() => loadExample('example1')}>MDP Example</button>
+            <button class="nav-btn"
+            on:click={() => loadExample('example2')}>Example 2</button>
+            <button class="nav-btn"
+            on:click={() => loadExample('example3')}>Example 3</button>
+          </div>
+        {/if}
+
+      </div>
       <button on:click={saveCode}
         style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
         class="nav-btn">
@@ -571,9 +615,9 @@
         white-space: nowrap;
         scrollbar-color: oklch(88.2% 0.059 254.128) transparent;
         margin-bottom: 0px;
-    }
+  }
 
-    .tab {
+  .tab {
         padding: 6px 1rem;
         background: oklch(97% 0.014 254.604); /* Light background */
         border: 2px solid #d0e1f9; /* Subtle border */
@@ -585,20 +629,20 @@
         color: rgb(80, 80, 80);
         position: relative;
         z-index: 0;
-    }
+  }
 
-    .tab.active {
+  .tab.active {
         background: white;
         z-index: 1;
         box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
         color: #000;
         border: none;
-    }
+  }
 
-    .tab:hover:not(.active) {
+  .tab:hover:not(.active) {
         background-color: #c7ddff; /* Light blue on hover */
         border-color: oklch(62.3% 0.214 259.815);
-    }
+  }
 
   .close-tab {
     margin-left: 2px;   /* optional slight left spacing */
@@ -619,25 +663,57 @@
     background: #cecece; /* Slightly darker background on hover */
   }
 
-.nav-btn {
-  background: oklch(55.7% 0.165 254.624);
-  color: #fff;
-  border: none;
-  font-weight: 500;
-  font-size: 1rem;
-  padding: 10px 20px;
-  margin: 0 4px;
-  cursor: pointer;
-  border-radius: 5px; /* Rounded pills */
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
+  .nav-btn {
+    background: oklch(55.7% 0.165 254.624);
+    color: #fff;
+    border: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 10px 20px;
+    margin: 0 4px;
+    cursor: pointer;
+    border-radius: 5px; /* Rounded pills */
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
 
-.nav-btn:hover {
-  background: oklch(93.2% 0.032 255.585);
-  color: oklch(40.7% 0.165 254.624);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+  .nav-btn:hover {
+    background: oklch(93.2% 0.032 255.585);
+    color: oklch(40.7% 0.165 254.624);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dropdown-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    min-width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  .btn-examples {
+    width: 200px;
+  }
+
+  .github-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center; 
+    gap: 20px;
+  }
 
 </style>
