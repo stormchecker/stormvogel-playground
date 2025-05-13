@@ -91,15 +91,9 @@
         code = tabs[activeTab]; // Load the selected tab's content
         editor.dispatch({
           changes: { from: 0, to: editor.state.doc.length, insert: code },
-          onMount(() => {
-            // Load code from local storage
-            window.addEventListener("beforeunload", function () {
-            saveCode();
-            stopExecution();
         });
-      }
     }
-      
+
     function loadExample(exampleTitle) {
       const example = examples.find(e => e.title === exampleTitle);
       if (example) {
@@ -182,17 +176,17 @@
     }
 
     onMount(() => {
-    // Load tabs from local storage
-    window.addEventListener("beforeunload", function () {
-      saveCode();
-      stopExecution();
-    });
+      // Load tabs from local storage
+      window.addEventListener("beforeunload", function () {
+        saveCode();
+        stopExecution();
+      });
 
-    getTabData();   // Load the tabs from local storage
-    createEditor(); // Load the editor
-    startupBackend();
-    tabScrollHandler();
-  });
+      getTabData();   // Load the tabs from local storage
+      createEditor(); // Load the editor
+      startupBackend();
+      tabScrollHandler();
+    });
 
     onDestroy(() => {
         window.removeEventListener("beforeunload", function () {
