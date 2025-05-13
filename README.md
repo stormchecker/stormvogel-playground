@@ -54,7 +54,7 @@ project-root/
 1. in backend folder:
     ```bash
     python3 app.py <in-backend-folder>
-    gunicorn --timeout 70 --bind 127.0.0.1:5000 (can also be used but does not set debug flag)
+    gunicorn --timeout 70 --bind 127.0.0.1:5000 app:app (can also be used but does not set debug flag)
     ```
 
 ### **Running frontend (Svelte)**
