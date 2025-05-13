@@ -10,7 +10,8 @@ export default defineConfig({
             '/api/startup': 'http://localhost:5000',
             '/api/lint': 'http://localhost:5000',
             '/api/execute': 'http://localhost:5000',
-            '/api/stop': `http://localhost:5000`
+            '/api/stop': `http://localhost:5000`,
+            '/api/save-tabs': `http://localhost:5000`,
         }
     },
     test: {

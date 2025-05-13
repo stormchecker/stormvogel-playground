@@ -75,8 +75,6 @@ def execute_code():
 '''
 Stops sandbox for user session
 is called from svelte post request:
-    TODO: use onDestroy in svelte frontend
-          use visibilitychange event to signal closed tabs or switch tabs -> maybe close sandbox then
 '''
 @app.route('/api/stop', methods=['POST'])
 def stop_sandbox():
@@ -86,6 +84,26 @@ def stop_sandbox():
         return jsonify({"status": "success", "message": "Sandbox stopped"})
     return jsonify({"status": "error", "message": "No active session"}), 400
 
-#Only used for development, deployment uses gunicorn which ignores this
+'''
+Saves all tabs for user
+    called from svelte post request in +page.svelte
+'''
+@app.route('/api/save-tabs', methods=['POST'])
+def save_tabs():
+    if "user_id" not in session:
+        return jsonify({"status": "error", "message": "No active session"}), 400
+
+    tabs = request.json.get("tabs")
+    if not tabs:
+        return jsonify({"status": "error", "message": "No tabs provided"}), 400
+
+    try:
+        result = sandbox.save_tabs(session["user_id"], tabs)
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Failed to save tabs: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# Only used for development, deployment uses gunicorn which ignores this
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)

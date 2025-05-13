@@ -31,7 +31,7 @@ beforeEach(() => {
       return Promise.resolve({
         json: () => Promise.resolve({
           status: 'success',
-          message: 'Succeeded in lauching container'
+          message: 'Succeeded in launching container'
         }),
       });
     } else if (url.endsWith('/lint')) {
@@ -50,36 +50,29 @@ afterEach(() => {
 });
 
 describe('Page Component', () => {
-  test('renders the Model Playground title', () => {
+  test('renders the Stormvogel Playground title', () => {
     render(Page);
-    expect(screen.getByText('Model Playground')).toBeInTheDocument();
+    expect(screen.getByText('Stormvogel Playground')).toBeInTheDocument();
   });
 
   test('renders the Execute button', () => {
     render(Page);
-    expect(screen.getByText('Execute')).toBeInTheDocument();
-  });
-
-  test('saves code to local storage', async () => {
-    render(Page);
-    const saveButton = screen.getByText('Save');
-    fireEvent.click(saveButton);
-
-    // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('python_code');
-    expect(savedCode).not.toBeNull();
-    expect(savedCode).toBe(''); // Assuming the initial code is an empty string
+    expect(screen.getByText('▶ Run')).toBeInTheDocument();
   });
 
   test('loads code from local storage', async () => {
-    localStorage.setItem('python_code', 'print("Hello, World!")');  
+    localStorage.setItem('tabs_data', '{"Model.py":"print(\\"model file\\")","Model.prism":"print(\\"prism file\\")"}');  
     render(Page);
     // Wait for the editor to be initialized
-    await screen.findByText("Model Playground"); // Ensures the component is fully mounted
+    await screen.findByText("Stormvogel Playground"); // Ensures the component is fully mounted
     // Get the CodeMirror editor
     const editorElement = document.querySelector('.code-editor');
     // Ensure the editor contains the expected text
-    expect(editorElement.textContent).toContain('print("Hello, World!")');
+    expect(editorElement.textContent).toContain('print("model file")');
+
+    // Check if the prism file is also loaded
+    fireEvent.click(screen.getByText('Model.prism'));
+    expect(editorElement.textContent).toContain('print("prism file")');
   });
 
   test('saves non-empty code to local storage', async () => {
@@ -91,8 +84,8 @@ describe('Page Component', () => {
     fireEvent.click(saveButton);
 
     // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('python_code');
-    expect(savedCode).toBe('print("Hello, World!")');
+    const savedCode = localStorage.getItem('tabs_data');
+    expect(savedCode).toBe('{"Model.py":"print(\\"Hello, World!\\")","Model.prism":""}'); // Assuming the initial code is an empty string
   });
 
   test('saves empty code to local storage', async () => {
@@ -104,8 +97,8 @@ describe('Page Component', () => {
     fireEvent.click(saveButton);
 
     // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('python_code');
-    expect(savedCode).toBe('');
+    const savedCode = localStorage.getItem('tabs_data');
+    expect(savedCode).toBe('{"Model.py":"","Model.prism":""}');
   });
 
   test('executes code and displays output', async () => {
@@ -129,7 +122,7 @@ describe('Page Component', () => {
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
 
     // Click the execute button
-    const executeButton = screen.getByText('Execute');
+    const executeButton = screen.getByText('▶ Run');
     fireEvent.click(executeButton);
 
     // Wait for the output to appear

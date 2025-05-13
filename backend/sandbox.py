@@ -32,7 +32,9 @@ def start_sandbox(user_id):
             cpu_quota=50000,
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
-        write_file_to_container("./timeout.py", container)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        src_path = os.path.join(script_dir, './timeout.py')
+        write_file_to_container(src_path, container)
     return container
 
 def separate_html(text):
@@ -132,7 +134,7 @@ def lint_code(user_id, code):
         file_path = "/script.py"
         write_to_file(code, container)
         
-        # Run Ruff with the temp file inside the container, ensuring it only checks the code
+        # Run Ruff with the correct file path
         exec_result = container.exec_run(["ruff", "check", "--no-fix", file_path], stdout=True, stderr=True)
         output = exec_result.output.decode()
         logger.debug(f"Linting output: exit_code={exec_result.exit_code}, output={output}")
@@ -159,3 +161,33 @@ def stop_sandbox(user_id):
     except docker.errors.NotFound:
         logger.warning(f"Sandbox {container_name} not found.")
         return False
+
+def save_tabs(user_id, tabs):
+    container_name = f"sandbox_{user_id}"
+
+    try:
+        container = client.containers.get(container_name)
+
+        # Create a tar archive of the tabs data
+        tarstream = io.BytesIO()
+        with tarfile.open(fileobj=tarstream, mode='w') as tar:
+            for tab_name, tab_content in tabs.items():
+                tab_info = tarfile.TarInfo(name=tab_name)  
+                tab_info.size = len(tab_content.encode())
+                tar.addfile(tab_info, io.BytesIO(tab_content.encode()))
+        tarstream.seek(0)
+
+        # Transfer the tar archive to the container, save it in the same directory as the script
+        if container.put_archive("/app", tarstream):
+            logger.debug(f"Tabs saved successfully in container {container_name}")
+            return {"status": "success", "message": "Tabs saved successfully"}
+        else:
+            logger.error(f"Failed to save tabs in container {container_name}")
+            return {"status": "error", "message": "Failed to save tabs in container"}
+
+    except docker.errors.NotFound:
+        logger.error(f"Container {container_name} not found")
+        return {"status": "error", "message": "Container not found"}
+    except Exception as e:
+        logger.error(f"Failed to save tabs: {str(e)}")
+        return {"status": "error", "message": f"Failed to save tabs: {str(e)}"}
