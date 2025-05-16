@@ -32,9 +32,6 @@ def start_sandbox(user_id):
             cpu_quota=50000,
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        src_path = os.path.join(script_dir, './timeout.py')
-        write_file_to_container(src_path, container)
     return container
 
 def separate_html(text):
