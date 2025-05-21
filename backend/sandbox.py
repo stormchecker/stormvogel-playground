@@ -32,9 +32,6 @@ def start_sandbox(user_id):
             cpu_quota=50000,
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        src_path = os.path.join(script_dir, './timeout.py')
-        write_file_to_container(src_path, container)
     return container
 
 def separate_html(text):
@@ -89,21 +86,19 @@ def execute_code(user_id, code):
             exec_results = container.exec_run("pgrep -fa python")
             exec_output = exec_results.output.decode()
 
-
         logger.debug(f"Executing code for {user_id}: {repr(code)}")
         
-        #use a heredoc to write the code, ensuring proper termination
         write_to_file(code, container)
 
-        #execute the script
-        #could use demux=True, this seperates into two byte string (stdout, stderr) instead of output.
-        exec_result = container.exec_run(["python3", "/timeout.py"], stdout=True, stderr=True)
+        # Use the Linux timeout command to enforce a 30-second limit
+        exec_result = container.exec_run(
+            ["timeout", "30", "python3", "/script.py"], 
+            stdout=True, stderr=True
+        )
         output = exec_result.output.decode()
 
-        match = re.search(r'Timeout10sec!', output)
-
-        if match:
-            logger.debug(f"Found a match, timed out!")
+        if exec_result.exit_code == 124:  # 124 is the exit code for timeout
+            logger.debug("Execution timed out!")
             return {"status": "error", "message": "Execution exceeded 10-second time limit, force quit"}
 
         if exec_result.exit_code == 0:
