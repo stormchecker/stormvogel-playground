@@ -5,6 +5,7 @@ import html
 import io
 import tarfile
 import os
+import subprocess
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -46,16 +47,6 @@ def separate_html(text):
 
     return html_content, non_html_content
 
-def write_file_to_container(src_path, container):
-    tarstream = io.BytesIO()
-    with tarfile.open(fileobj=tarstream, mode='w') as tar:
-        tar.add(src_path, arcname=os.path.basename(src_path))    
-    tarstream.seek(0)
-    if container.put_archive("/", tarstream):
-        logger.debug(f"Wrote {src_path} to {container.id}:/")
-    else:
-        logger.debug("File transfer failure")
-
 def write_to_file(code, container):
     tarstream = io.BytesIO()
     with tarfile.TarFile(fileobj=tarstream, mode="w") as tar:
@@ -90,19 +81,28 @@ def execute_code(user_id, code):
         
         write_to_file(code, container)
 
-        # Use the Linux timeout command to enforce a 30-second limit
-        exec_result = container.exec_run(
-            ["timeout", "30", "python3", "/script.py"], 
-            stdout=True, stderr=True
+        #container.exec_run does not have an timeout, so we use subprocess here
+        #exec_result = container.exec_run(
+        #    ["timeout", "30", "python3", "/script.py"], 
+        #    stdout=True, stderr=True
+        #)
+        result = subprocess.run(
+            ["docker", "exec", container.name, "timeout", "30s", "python3", "/script.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=40
         )
-        output = exec_result.output.decode()
 
-        if exec_result.exit_code == 124:  # 124 is the exit code for timeout
+        output = result.stdout + result.stderr
+        exit_code = result.returncode
+
+        if exit_code == 124:  # 124 is the exit code for bash timeout command
             logger.debug("Execution timed out!")
-            return {"status": "error", "message": "Execution exceeded 10-second time limit, force quit"}
+            return {"status": "error", "message": "Execution exceeded 30-second time limit, force quit"}
 
-        if exec_result.exit_code == 0:
-            logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
+        if exit_code == 0:
+            logger.debug(f"Execution output: exit_code={exit_code}, output={output}")
             #separate output from debug information
             iframe_html, logs = separate_html(output)
             return {"status": "success", "output_html": iframe_html , "output_non_html": logs}
@@ -112,6 +112,9 @@ def execute_code(user_id, code):
     except docker.errors.NotFound:
         logger.error(f"Container {container_name} not found")
         return {"status": "error", "message": "Container not found"}
+    except subprocess.TimeoutExpired:
+        logger.debug("External timeout triggered")
+        return {"status": "error", "message": "External timeout was triggered, abnormal termination"}
     except Exception as e:
         logger.error(f"Execution failed: {str(e)}")
         return {"status": "error", "message": f"Execution failed: {str(e)}"}
