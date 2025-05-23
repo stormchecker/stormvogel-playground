@@ -51,17 +51,7 @@ def separate_html(text):
 
     return html_content, non_html_content
 
-# both functions below are used to write code to a temporary file and send that to the container
-def write_file_to_container(src_path, container):
-    tarstream = io.BytesIO()
-    with tarfile.open(fileobj=tarstream, mode='w') as tar:
-        tar.add(src_path, arcname=os.path.basename(src_path))    
-    tarstream.seek(0)
-    if container.put_archive("/", tarstream):
-        logger.debug(f"Wrote {src_path} to {container.id}:/")
-    else:
-        logger.debug("File transfer failure")
-
+# write code to a temporary file and send that to the container
 def write_to_file(code, container):
     tarstream = io.BytesIO()
     with tarfile.TarFile(fileobj=tarstream, mode="w") as tar:
