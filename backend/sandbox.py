@@ -1,10 +1,8 @@
 import docker
 import logging
 import re
-import html
 import io
 import tarfile
-import os
 import subprocess
 
 logging.basicConfig(level=logging.DEBUG)
