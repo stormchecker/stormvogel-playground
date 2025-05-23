@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 client = docker.from_env()
 
+# either reuses and existing container or creates a new one
 def start_sandbox(user_id):
     container_name = f"sandbox_{user_id}"
     existing_containers = client.containers.list(filters={"name": container_name})
@@ -35,6 +36,7 @@ def start_sandbox(user_id):
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
     return container
 
+# matches HTML code, and separates it from the rest of the string
 def separate_html(text):
     match = re.search(r'<!DOCTYPE html>.*?</html>', text, re.DOTALL | re.IGNORECASE)
 
@@ -47,6 +49,7 @@ def separate_html(text):
 
     return html_content, non_html_content
 
+# write code to a temporary file and send that to the container
 def write_to_file(code, container):
     tarstream = io.BytesIO()
     with tarfile.TarFile(fileobj=tarstream, mode="w") as tar:
@@ -61,6 +64,7 @@ def write_to_file(code, container):
     else:
         logger.debug("File transfer failure")
 
+# executes a specified file in the container and returns the result if succesful
 def execute_code(user_id, code):
     container_name = f"sandbox_{user_id}"
     
@@ -119,6 +123,7 @@ def execute_code(user_id, code):
         logger.error(f"Execution failed: {str(e)}")
         return {"status": "error", "message": f"Execution failed: {str(e)}"}
 
+# similar to execute code but, uses ruff command to provide linting feedback for the file
 def lint_code(user_id, code):
     container_name = f"sandbox_{user_id}"
     
@@ -148,6 +153,7 @@ def lint_code(user_id, code):
         logger.error(f"Linting failed: {str(e)}")
         return {"status": "error", "message": f"Linting failed: {str(e)}"}
 
+# stops the container and removes it
 def stop_sandbox(user_id):
     container_name = f"sandbox_{user_id}"
     try:
@@ -160,6 +166,7 @@ def stop_sandbox(user_id):
         logger.warning(f"Sandbox {container_name} not found.")
         return False
 
+# saves code from a tab, puts to a temporary file and sends to specified container
 def save_tabs(user_id, tabs):
     container_name = f"sandbox_{user_id}"
 
