@@ -28,7 +28,7 @@ def start_sandbox(user_id):
             name=container_name,
             stdin_open=True,
             tty=True,
-            security_opt=["no-new-privileges"]
+            security_opt=["no-new-privileges"],
             mem_limit="256m",
             cpu_quota=50000,
         )
