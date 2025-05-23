@@ -5,6 +5,7 @@ import html
 import io
 import tarfile
 import os
+import subprocess
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -32,9 +33,6 @@ def start_sandbox(user_id):
             cpu_quota=50000,
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        src_path = os.path.join(script_dir, './timeout.py')
-        write_file_to_container(src_path, container)
     return container
 
 def separate_html(text):
@@ -48,16 +46,6 @@ def separate_html(text):
         non_html_content = text.strip()  # If no HTML, return the entire text as non-HTML
 
     return html_content, non_html_content
-
-def write_file_to_container(src_path, container):
-    tarstream = io.BytesIO()
-    with tarfile.open(fileobj=tarstream, mode='w') as tar:
-        tar.add(src_path, arcname=os.path.basename(src_path))    
-    tarstream.seek(0)
-    if container.put_archive("/", tarstream):
-        logger.debug(f"Wrote {src_path} to {container.id}:/")
-    else:
-        logger.debug("File transfer failure")
 
 def write_to_file(code, container):
     tarstream = io.BytesIO()
@@ -89,25 +77,32 @@ def execute_code(user_id, code):
             exec_results = container.exec_run("pgrep -fa python")
             exec_output = exec_results.output.decode()
 
-
         logger.debug(f"Executing code for {user_id}: {repr(code)}")
         
-        #use a heredoc to write the code, ensuring proper termination
         write_to_file(code, container)
 
-        #execute the script
-        #could use demux=True, this seperates into two byte string (stdout, stderr) instead of output.
-        exec_result = container.exec_run(["python3", "/timeout.py"], stdout=True, stderr=True)
-        output = exec_result.output.decode()
+        #container.exec_run does not have an timeout, so we use subprocess here
+        #exec_result = container.exec_run(
+        #    ["timeout", "30", "python3", "/script.py"], 
+        #    stdout=True, stderr=True
+        #)
+        result = subprocess.run(
+            ["docker", "exec", container.name, "timeout", "30s", "python3", "/script.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=40
+        )
 
-        match = re.search(r'Timeout10sec!', output)
+        output = result.stdout + result.stderr
+        exit_code = result.returncode
 
-        if match:
-            logger.debug(f"Found a match, timed out!")
-            return {"status": "error", "message": "Execution exceeded 10-second time limit, force quit"}
+        if exit_code == 124:  # 124 is the exit code for bash timeout command
+            logger.debug("Execution timed out!")
+            return {"status": "error", "message": "Execution exceeded 30-second time limit, force quit"}
 
-        if exec_result.exit_code == 0:
-            logger.debug(f"Execution output: exit_code={exec_result.exit_code}, output={output}")
+        if exit_code == 0:
+            logger.debug(f"Execution output: exit_code={exit_code}, output={output}")
             #separate output from debug information
             iframe_html, logs = separate_html(output)
             return {"status": "success", "output_html": iframe_html , "output_non_html": logs}
@@ -117,6 +112,9 @@ def execute_code(user_id, code):
     except docker.errors.NotFound:
         logger.error(f"Container {container_name} not found")
         return {"status": "error", "message": "Container not found"}
+    except subprocess.TimeoutExpired:
+        logger.debug("External timeout triggered")
+        return {"status": "error", "message": "External timeout was triggered, abnormal termination"}
     except Exception as e:
         logger.error(f"Execution failed: {str(e)}")
         return {"status": "error", "message": f"Execution failed: {str(e)}"}
