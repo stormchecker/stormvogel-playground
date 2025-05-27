@@ -50,7 +50,8 @@ pgc_study = pgc.build_pgc(
     modeltype=ModelType.MDP,
     rewards=rewards
 )
-vis = show(pgc_study, layout=Layout("layouts/pinkgreen.json"))`
+vis = show(pgc_study, do_init_server= False)
+print(vis.generate_html())`
     },
     {
         title: 'CTMC',
