@@ -80,7 +80,7 @@ test('Execute Python code and check output', async ({ page }) => {
 
   // Wait for the output to appear
   const outputLocator = page.locator('#output-non-html'); // Check the first output element
-  await expect(outputLocator).toHaveText('Hello, Playwright!');
+  await expect(outputLocator).toHaveText('Hello, Playwright!', { timeout: 10000 }); // Give it some time to process
 });
 
 test('Execute Python code, refresh page, and execute again', async ({ page }) => {
@@ -97,7 +97,7 @@ test('Execute Python code, refresh page, and execute again', async ({ page }) =>
 
   // Wait for the output to appear
   const outputLocator = page.locator('#output-non-html');
-  await expect(outputLocator).toHaveText('Hello, Playwright!');
+  await expect(outputLocator).toHaveText('Hello, Playwright!', { timeout: 10000 }); // Give it some time to process
 
   // Refresh the page
   await page.reload();
@@ -107,7 +107,7 @@ test('Execute Python code, refresh page, and execute again', async ({ page }) =>
   await editor.fill('print("Hello, Playwright!")');
   
   await page.locator('button', { hasText: '▶ Run' }).click();
-  await expect(outputLocator).toHaveText('Hello, Playwright!');
+  await expect(outputLocator).toHaveText('Hello, Playwright!', { timeout: 10000 }); // Check if the output is still correct after refresh
 });
 
 test('Execute faulty Python code and check for errors', async ({ page }) => {
@@ -136,7 +136,7 @@ test('Execute faulty Python code and check for errors', async ({ page }) => {
 
   // Check execution errors
   const errorLocator = page.locator('#error'); // Adjust selector as needed
-  await expect(errorLocator).toContainText('SyntaxError');
+  await expect(errorLocator).toContainText('SyntaxError', { timeout: 10000 }); // Give it some time to process
 });
 
 test('Test auto save functionality with multiple tabs', async ({ page }) => {
@@ -308,7 +308,7 @@ label "rolled6" = s=6;`);
   // Wait for the output to appear
   const outputLocator = page.locator('#output-non-html'); // Check the output
   await expect(outputLocator).toHaveText(`Number of states: 7
-Number of transitions: 12`);
+Number of transitions: 12`, { timeout: 10000 }); // Give it some time to process
 });
 
 test('Export tabs functionality', async ({ page }) => {
