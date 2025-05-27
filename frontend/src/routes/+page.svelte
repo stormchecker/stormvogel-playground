@@ -351,12 +351,10 @@
 
         {#if dropdownOpen}
           <div class="dropdown-menu">
-            <button class="nav-btn"
-            on:click={() => loadExample('example1')}>MDP Example</button>
-            <button class="nav-btn"
-            on:click={() => loadExample('example2')}>Example 2</button>
-            <button class="nav-btn"
-            on:click={() => loadExample('example3')}>Example 3</button>
+            {#each examples as example}
+              <button class="nav-btn"
+                on:click={() => loadExample(example.title)}>{example.title}</button>
+            {/each}
           </div>
         {/if}
 
