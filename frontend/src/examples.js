@@ -1,11 +1,14 @@
 export const examples = [
     {
         title: 'MDP',
-        code: 'from stormvogel import *\nvis = show(examples.create_car_mdp(), do_init_server=False)\nprint(vis.generate_html())'
+        files: {
+            "mdp.py": 'from stormvogel import *\nvis = show(examples.create_car_mdp(), do_init_server=False)\nprint(vis.generate_html())'
+        }
     },
     {
         title: 'PGC',
-        code: `from stormvogel import pgc
+        files: {
+            "pgc.py": `from stormvogel import pgc
 from stormvogel.model import EmptyAction, ModelType
 from stormvogel.show import show
 from stormvogel.layout import Layout
@@ -52,10 +55,12 @@ pgc_study = pgc.build_pgc(
 )
 vis = show(pgc_study, do_init_server= False)
 print(vis.generate_html())`
+        }
     },
     {
         title: 'CTMC',
-        code: `from stormvogel import *
+        files: {
+            "ctmc.py" : `from stormvogel import *
 # Create a new model with the name "Nuclear fusion"
 ctmc = stormvogel.model.new_ctmc("Nuclear fusion")
 
@@ -77,18 +82,18 @@ for i in range(5):
 ctmc.add_self_loops()
 vis = show(ctmc, do_init_server = False)
 print(vis.generate_html())`
+        },
     },
-    {title: 'USING PRISM',
-     code: `from stormvogel import *
+    {
+        title: 'Import prism model',
+        files: {
+        "prism_example.py": `from stormvogel import *
 import stormpy
-prism_code = stormpy.parse_prism_program("Model.prism")
+prism_code = stormpy.parse_prism_program("prism_example.prism")
 prism_die = mapping.from_prism(prism_code)
 vis3 = show(prism_die,do_init_server=False)
-print(vis3.generate_html())`
-    },
-{
-    title: 'PRISM CODE',
-    code: `dtmc
+print(vis3.generate_html())`,
+        "prism_example.prism": `dtmc
 
 module die
     // The integers 0..7 represent our states, and 0 is the initial state.
@@ -113,4 +118,6 @@ label "rolled3" = s=3;
 label "rolled4" = s=4;
 label "rolled5" = s=5;
 label "rolled6" = s=6;`
-}];
+        }, 
+    },
+];

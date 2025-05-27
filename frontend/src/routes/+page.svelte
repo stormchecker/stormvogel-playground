@@ -96,16 +96,22 @@
     }
 
     function loadExample(exampleTitle) {
+      // Get the example from the predefined examples list
       const example = examples.find(e => e.title === exampleTitle);
-      if (example) {
+      if (example && example.files) {
+        // Merge example tabs into current tabs (overwrite if name exists)
+        tabs = { ...tabs, ...example.files };
+        // Set the first file of the example as the active tab
+        activeTab = Object.keys(example.files)[0];
+        code = tabs[activeTab];
         editor.dispatch({
-          changes: {
-            from: 0,
-            to: editor.state.doc.length,
-            insert: example.code, // Code placeholder
+          changes: { 
+            from: 0, 
+            to: editor.state.doc.length, 
+            insert: code 
           }
-        })
-      dropdownOpen=false;
+        });
+        dropdownOpen = false;
       }
     }
 
@@ -129,10 +135,10 @@
 
     function addTab() {
       let newTabIndex = 1;
-      while (tabs[`Tab ${newTabIndex}.py`] !== undefined) {
+      while (tabs[`Tab${newTabIndex}.py`] !== undefined) {
         newTabIndex++; // Find the next available unique tab name
       }
-      const newTabName = `Tab ${newTabIndex}.py`;
+      const newTabName = `Tab${newTabIndex}.py`;
       tabs = { ...tabs, [newTabName]: "" }; 
       activeTab = newTabName; // Set the new tab as active
       code = tabs[activeTab]; // Update the editor content
