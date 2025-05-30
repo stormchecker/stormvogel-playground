@@ -26,6 +26,7 @@
   };
   let dropdownOpen = false; // Examples dropdown menu
   const githubUrl = 'https://github.com/moves-rwth/stormvogel';
+  let lintingEnabled = true; // Toggle for enabling/disabling linting
 
   // Save all tabs to local storage
   function saveCode() {
@@ -177,6 +178,12 @@
     }
 
     onMount(() => {
+      // Load linting preference from localStorage
+      const lintPref = localStorage.getItem('linting_enabled');
+      if (lintPref !== null) {
+        lintingEnabled = lintPref === 'true';
+      }
+      
       // Load tabs from local storage
       window.addEventListener("beforeunload", function () {
         saveCode();
@@ -302,8 +309,18 @@
       }
   }
 
+  function toggleLinting() {
+    lintingEnabled = !lintingEnabled;
+    localStorage.setItem('linting_enabled', lintingEnabled.toString()); // Save the preference to localStorage
+  }
+
   async function lintCode(view) {
     const code = view.state.doc.toString();
+    // Skip linting if the active tab is not a Python file or linting is disabled
+    if (!activeTab.endsWith('.py') || !lintingEnabled) {
+      lintErrors = [];
+      return lintErrors;
+    }
     try {
       const response = await fetch('/api/lint', {
         method: 'POST',
@@ -361,6 +378,11 @@
         {/if}
 
       </div>
+      <button on:click={() => toggleLinting()}
+        class="nav-btn"
+        style={lintingEnabled ? '' : 'background: oklch(86.9% 0.022 252.894); color: black;'}>
+        {lintingEnabled ? 'Linting: On' : 'Linting: Off'}
+      </button>
       <button on:click={saveCode}
         style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
         class="nav-btn">
