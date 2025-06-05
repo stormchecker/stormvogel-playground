@@ -375,8 +375,14 @@
         Documentation
       </a>
       <div class=help-container>
-        <div class=help-link role='button' on:click={toggleHelp}>Help</div>
-
+        <div class=help-link 
+              role='button' 
+              tabindex="0" 
+              on:click={toggleHelp} 
+              on:keydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') 
+                  toggleHelp();}}
+        >Help</div>
         {#if showHelp}
           <div class="help-box">
             <button class="close-btn" on:click={toggleHelp} aria-label="Close">x</button>
