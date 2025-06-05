@@ -344,3 +344,57 @@ test('Export tabs functionality', async ({ page }) => {
   expect(Object.keys(zip.files).some(file => /stormvogel-playground-\d{2}-\d{2}-\d{4}\/Tab 1\.py/.test(file))).toBe(true);
 });
 
+test('Linting does not work when linting is disabled', async ({ page }) => {
+  await page.goto('/');
+
+  // Locate the CodeMirror editor and input faulty Python code
+  const editor = page.locator('.cm-content');
+  await editor.click();
+  await editor.fill('print("Hello, Playwright!');
+  await page.waitForTimeout(2000); // Wait for linting
+
+  // Expect lint errors to be present
+  const lintText = await page.locator('#lint-errors').innerText();
+  expect(lintText).not.toBe('');
+
+  // Disable linting
+  await page.click('.nav-btn:has-text("Linting")');
+
+  // Trigger a small edit to force linter update
+  await editor.fill(' ');
+  await editor.press('Backspace');
+  await page.waitForTimeout(2000);
+
+  // Check that lint errors are now cleared in the DOM
+  const lintTextAfter = await page.locator('#lint-errors').innerText();
+  expect(lintTextAfter).toBe('');
+});
+
+test('Linting only works on .py files', async ({ page }) => {
+  await page.goto('/');
+  
+  // Switch to Model.prism tab
+  await page.locator('.tab', { hasText: 'Model.prism' }).click();
+
+  // Locate the CodeMirror editor and input faulty Python code
+  const editor = page.locator('.cm-content');
+  await editor.click();
+  await editor.fill('example code');
+  await page.waitForTimeout(2000); // Wait for linting
+
+  // Expect zero lint errors in the DOM
+  const lintTextPrism = await page.locator('#lint-errors').innerText();
+  expect(lintTextPrism).toBe('');
+
+  // Switch to Model.py tab
+  await page.click('.tab:has-text("Model.py")');
+  await page.click('.code-editor');
+
+  await editor.click();
+  await editor.fill('print("Hello, Playwright!');
+  await page.waitForTimeout(2000); // Wait for linting
+
+  // Expect lint errors in the DOM
+  const lintTextPython = await page.locator('#lint-errors').innerText();
+  expect(lintTextPython).not.toBe('');
+});

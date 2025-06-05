@@ -28,8 +28,7 @@ def start_sandbox(user_id):
             stdin_open=True,
             tty=True,
             security_opt=["no-new-privileges"],
-            mem_limit="256m",
-            cpu_quota=50000,
+            mem_limit="256m"
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
     return container
