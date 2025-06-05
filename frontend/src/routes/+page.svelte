@@ -351,7 +351,7 @@
         Documentation
       </a>
       <div class=help-container>
-        <div class=help-link on:click={toggleHelp}>Help</div>
+        <div class=help-link role='button' on:click={toggleHelp}>Help</div>
 
         {#if showHelp}
           <div class="help-box">
