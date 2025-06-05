@@ -17,29 +17,31 @@ project-root/
 ├── frontend/       # Svelte frontend
 │   ├── src/        # Component source code
 │   └── ...         # Other frontend files
-└── Dockerfile      # Dockerfile with the stormvogel playground
 ```
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Deployment Setup Instructions
+* See `server_installation_writeup.md`
+
+---
+
+## 🚀 Development Setup Instructions
 
 ### **Backend Setup (Flask)**
+
+> **Note:** For detailed steps you can also look into `server_installation_writeup` in particular Step 1 and Step 2 
+
 1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
    also install Gvisor: https://gvisor.dev/docs/user_guide/install/
+   To get the docker image we now only need to call this :
+   ```bash
+   docker pull stormvogel/stormvogel
+   ```
 
-
-2. Install flask and library for .env:
+2. Install backend dependencies (probably want to use a pip or conda environment):
     ```bash
-    pip install flask
-    pip install flask_cors
-    pip install python-dotenv
-    ```
-
-3. Install python docker api:
-    ```bash
-    pip install docker
-    ```
+    pip install requirements.txt
 
 ### **Frontend Setup (Svelte)**
 1. Install flask:
@@ -51,18 +53,37 @@ project-root/
 ### **Running backend (Flask)**
 1. in backend folder:
     ```bash
-    sudo python3 app.py
+    python3 app.py <in-backend-folder>
+    gunicorn --timeout 70 --bind 127.0.0.1:5000 app:app (can also be used but does not set debug flag)
     ```
 
-### **Running backend (Flask)**
+### **Running frontend (Svelte)**
 1. in frontend folder:
     ```bash
-    npm run (build/dev)
+    npm run dev
     ```
 
----
+### Testing
 
-### **
+To get a coverage report of the frontend run:
+```bash
+npm run coverage 
+```
+To just test the frontend:
+```bash
+npm test
+```
+
+To run end-to-end tests run playwright:
+```bash
+npm run playwright
+```
+You can also run the tests in ui mode:
+```sh
+npm run playwright:ui
+```
+
+---
 
 ## 🤝 Collaboration Guidelines
 
