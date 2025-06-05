@@ -1,11 +1,14 @@
 export const examples = [
     {
-        title: 'example1',
-        code: 'from stormvogel import *\nvis = show(examples.create_car_mdp(), do_init_server=False)\nprint(vis.generate_html())'
+        title: 'MDP',
+        files: {
+            "mdp.py": 'from stormvogel import *\nvis = show(examples.create_car_mdp(), do_init_server=False)\nprint(vis.generate_html())'
+        }
     },
     {
-        title: 'example2',
-        code: `from stormvogel import pgc
+        title: 'PGC',
+        files: {
+            "pgc.py": `from stormvogel import pgc
 from stormvogel.model import EmptyAction, ModelType
 from stormvogel.show import show
 from stormvogel.layout import Layout
@@ -50,11 +53,14 @@ pgc_study = pgc.build_pgc(
     modeltype=ModelType.MDP,
     rewards=rewards
 )
-vis = show(pgc_study, layout=Layout("layouts/pinkgreen.json"))`
+vis = show(pgc_study, do_init_server= False)
+print(vis.generate_html())`
+        }
     },
     {
-        title: 'example3',
-        code: `from stormvogel import *
+        title: 'CTMC',
+        files: {
+            "ctmc.py" : `from stormvogel import *
 # Create a new model with the name "Nuclear fusion"
 ctmc = stormvogel.model.new_ctmc("Nuclear fusion")
 
@@ -76,5 +82,42 @@ for i in range(5):
 ctmc.add_self_loops()
 vis = show(ctmc, do_init_server = False)
 print(vis.generate_html())`
-    }
+        },
+    },
+    {
+        title: 'Import prism model',
+        files: {
+        "prism_example.py": `from stormvogel import *
+import stormpy
+prism_code = stormpy.parse_prism_program("prism_example.prism")
+prism_die = mapping.from_prism(prism_code)
+vis3 = show(prism_die,do_init_server=False)
+print(vis3.generate_html())`,
+        "prism_example.prism": `dtmc
+
+module die
+    // The integers 0..7 represent our states, and 0 is the initial state.
+    s : [0..7] init 0;
+    // From s=0, we can go to 1,2,3,4,5,6 with 1/6th probability.
+    // The + sign can be interpreted as an 'or'
+    // Note that this is similar to our delta function.
+    [] s=0 -> 1/6 : (s'=1) +
+                1/6: (s'=2) +
+                1/6: (s'=3) +
+                1/6: (s'=4) +
+                1/6: (s'=5) +
+                1/6: (s'=6);
+    // Self loops
+    [] s>0 -> (s'=s);
+endmodule
+
+// Add the desired labels
+label "rolled1" = s=1;
+label "rolled2" = s=2;
+label "rolled3" = s=3;
+label "rolled4" = s=4;
+label "rolled5" = s=5;
+label "rolled6" = s=6;`
+        }, 
+    },
 ];

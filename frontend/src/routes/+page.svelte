@@ -28,6 +28,8 @@
   let dropdownOpen = false; // Examples dropdown menu
   const githubUrl = 'https://github.com/moves-rwth/stormvogel';
   const docsUrl = 'https://moves-rwth.github.io/stormvogel/';
+  let lintingEnabled = true; // Toggle for enabling/disabling linting
+
 
   // Save all tabs to local storage
   function saveCode() {
@@ -102,16 +104,22 @@
     }
 
     function loadExample(exampleTitle) {
+      // Get the example from the predefined examples list
       const example = examples.find(e => e.title === exampleTitle);
-      if (example) {
+      if (example && example.files) {
+        // Merge example tabs into current tabs (overwrite if name exists)
+        tabs = { ...tabs, ...example.files };
+        // Set the first file of the example as the active tab
+        activeTab = Object.keys(example.files)[0];
+        code = tabs[activeTab];
         editor.dispatch({
-          changes: {
-            from: 0,
-            to: editor.state.doc.length,
-            insert: example.code, // Code placeholder
+          changes: { 
+            from: 0, 
+            to: editor.state.doc.length, 
+            insert: code 
           }
-        })
-      dropdownOpen=false;
+        });
+        dropdownOpen = false;
       }
     }
 
@@ -135,10 +143,10 @@
 
     function addTab() {
       let newTabIndex = 1;
-      while (tabs[`Tab ${newTabIndex}.py`] !== undefined) {
+      while (tabs[`Tab${newTabIndex}.py`] !== undefined) {
         newTabIndex++; // Find the next available unique tab name
       }
-      const newTabName = `Tab ${newTabIndex}.py`;
+      const newTabName = `Tab${newTabIndex}.py`;
       tabs = { ...tabs, [newTabName]: "" }; 
       activeTab = newTabName; // Set the new tab as active
       code = tabs[activeTab]; // Update the editor content
@@ -183,6 +191,12 @@
     }
 
     onMount(() => {
+      // Load linting preference from localStorage
+      const lintPref = localStorage.getItem('linting_enabled');
+      if (lintPref !== null) {
+        lintingEnabled = lintPref === 'true';
+      }
+      
       // Load tabs from local storage
       window.addEventListener("beforeunload", function () {
         saveCode();
@@ -308,8 +322,18 @@
       }
   }
 
+  function toggleLinting() {
+    lintingEnabled = !lintingEnabled;
+    localStorage.setItem('linting_enabled', lintingEnabled.toString()); // Save the preference to localStorage
+  }
+
   async function lintCode(view) {
     const code = view.state.doc.toString();
+    // Skip linting if the active tab is not a Python file or linting is disabled
+    if (!activeTab.endsWith('.py') || !lintingEnabled) {
+      lintErrors = [];
+      return lintErrors;
+    }
     try {
       const response = await fetch('/api/lint', {
         method: 'POST',
@@ -382,16 +406,19 @@
 
         {#if dropdownOpen}
           <div class="dropdown-menu">
-            <button class="nav-btn"
-            on:click={() => loadExample('example1')}>MDP Example</button>
-            <button class="nav-btn"
-            on:click={() => loadExample('example2')}>Example 2</button>
-            <button class="nav-btn"
-            on:click={() => loadExample('example3')}>Example 3</button>
+            {#each examples as example}
+              <button class="nav-btn"
+                on:click={() => loadExample(example.title)}>{example.title}</button>
+            {/each}
           </div>
         {/if}
 
       </div>
+      <button on:click={() => toggleLinting()}
+        class="nav-btn"
+        style={lintingEnabled ? '' : 'background: oklch(86.9% 0.022 252.894); color: black;'}>
+        {lintingEnabled ? 'Linting: On' : 'Linting: Off'}
+      </button>
       <button on:click={saveCode}
         style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
         class="nav-btn">
