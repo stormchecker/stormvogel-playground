@@ -385,9 +385,9 @@
             <button class="nav-btn"
             on:click={() => loadExample('example1')}>MDP Example</button>
             <button class="nav-btn"
-            on:click={() => loadExample('example2')}>Exam Preparation</button>
+            on:click={() => loadExample('example2')}>Example 2</button>
             <button class="nav-btn"
-            on:click={() => loadExample('example3')}>Nuclear Fusion</button>
+            on:click={() => loadExample('example3')}>Example 3</button>
           </div>
         {/if}
 
