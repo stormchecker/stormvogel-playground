@@ -103,6 +103,11 @@ There is some issue with running the server locally on firefox
 there seems to be some internal timeout that stops requests.
 We could not figure out why this happens it is certainly not our code.
 
+3. The memory limit and cpu quota on the containers might need some tuning
+Depending on how much cpu you want to give each container,
+currently it is unboudned. You can change it in the starup container in sandbox.py.
+The memory limit can also be changed as it is qutie low (256MB) right now.
+
 ---
 
 ## 📜 License 
