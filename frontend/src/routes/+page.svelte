@@ -329,8 +329,8 @@
 
   async function lintCode(view) {
     const code = view.state.doc.toString();
-    // Skip linting if the active tab is not a Python file or linting is disabled
-    if (!activeTab.endsWith('.py') || !lintingEnabled) {
+    // Only lint if not executing, the active tab is a Python file, and linting is enabled
+    if (isExecuting || !activeTab.endsWith('.py') || !lintingEnabled) {
       lintErrors = [];
       return lintErrors;
     }

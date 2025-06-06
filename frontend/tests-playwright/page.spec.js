@@ -49,7 +49,7 @@ test('Save code functionality with multiple tabs', async ({ page }) => {
   await editor.fill('print("Code in Model.py")');
 
   // Switch to the third tab and add code
-  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await page.locator('.tab', { hasText: 'Tab1' }).click();
   await editor.click();
   await editor.fill('print("Code in Tab 1")');
 
@@ -63,7 +63,7 @@ test('Save code functionality with multiple tabs', async ({ page }) => {
   // Check if all tabs are saved in localStorage
   const savedTabs = await page.evaluate(() => JSON.parse(localStorage.getItem('tabs_data')));
   expect(savedTabs['Model.py']).toBe('print("Code in Model.py")');
-  expect(savedTabs['Tab 1.py']).toBe('print("Code in Tab 1")');
+  expect(savedTabs['Tab1.py']).toBe('print("Code in Tab 1")');
 });
 
 test('Execute Python code and check output', async ({ page }) => {
@@ -152,7 +152,7 @@ test('Test auto save functionality with multiple tabs', async ({ page }) => {
   await editor.fill('print("Code in Model.py")');
 
   // Add code to the second tab
-  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await page.locator('.tab', { hasText: 'Tab1' }).click();
   await editor.click();
   await editor.fill('print("Code in Tab 1")');
   
@@ -160,7 +160,7 @@ test('Test auto save functionality with multiple tabs', async ({ page }) => {
   await page.evaluate(() => localStorage.setItem('tabs_data', JSON.stringify({
     'Model.py': 'print("Code in Model.py")',
     'Model.prism': '',
-    'Tab 1': 'print("Code in Tab 1")'
+    'Tab1': 'print("Code in Tab 1")'
   })));
   await page.reload();
   
@@ -170,7 +170,7 @@ test('Test auto save functionality with multiple tabs', async ({ page }) => {
   expect(editorContent1).toBe('print("Code in Model.py")');
 
   // Verify the second tab's content
-  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await page.locator('.tab', { hasText: 'Tab1' }).click();
   const editorContent2 = await page.locator('.cm-content').textContent();
   expect(editorContent2).toBe('print("Code in Tab 1")');
 });
@@ -201,7 +201,7 @@ test('Test user navigates away and returns with multiple tabs', async ({ page })
   await editor.fill('print("Code in Model.py")');
 
   // Add code to the second tab
-  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await page.locator('.tab', { hasText: 'Tab1' }).click();
   await editor.click();
   await editor.fill('print("Code in Tab 1")');
 
@@ -217,7 +217,7 @@ test('Test user navigates away and returns with multiple tabs', async ({ page })
   expect(editorContent1).toBe('print("Code in Model.py")');
 
   // Verify the second tab's content
-  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await page.locator('.tab', { hasText: 'Tab1' }).click();
   const editorContent2 = await page.locator('.cm-content').textContent();
   expect(editorContent2).toBe('print("Code in Tab 1")');
 });
@@ -322,7 +322,7 @@ test('Export tabs functionality', async ({ page }) => {
 
   // Add code to the second tab
   await page.locator('button.add-tab').click();
-  await page.locator('.tab', { hasText: 'Tab 1' }).click();
+  await page.locator('.tab', { hasText: 'Tab1' }).click();
   await editor.click();
   await editor.fill('print("Code in Tab 1")');
 
@@ -341,7 +341,7 @@ test('Export tabs functionality', async ({ page }) => {
 
   // Check if the zip contains the expected files using regex
   expect(Object.keys(zip.files).some(file => /stormvogel-playground-\d{2}-\d{2}-\d{4}\/Model\.py/.test(file))).toBe(true);
-  expect(Object.keys(zip.files).some(file => /stormvogel-playground-\d{2}-\d{2}-\d{4}\/Tab 1\.py/.test(file))).toBe(true);
+  expect(Object.keys(zip.files).some(file => /stormvogel-playground-\d{2}-\d{2}-\d{4}\/Tab1\.py/.test(file))).toBe(true);
 });
 
 test('Linting does not work when linting is disabled', async ({ page }) => {
