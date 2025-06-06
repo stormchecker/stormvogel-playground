@@ -77,192 +77,192 @@
     });
   }
 
-    function toggleHelp() {
-      showHelp = !showHelp;
-    }
+  function toggleHelp() {
+    showHelp = !showHelp;
+  }
 
-    // Adds code editor with syntax highlighting
-    function createEditor() {
-        editor = new EditorView({
-            doc: code,
-            // Sets up the editor with Python syntax highlighting, tab handling and linting
-            extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
-            parent: document.querySelector(".code-editor"),
-        });
-    }
+  // Adds code editor with syntax highlighting
+  function createEditor() {
+    editor = new EditorView({
+      doc: code,
+      // Sets up the editor with Python syntax highlighting, tab handling and linting
+      extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
+      parent: document.querySelector(".code-editor"),
+    });
+  }
 
-    function switchTab(tabName) {
-      // Save the current tab's content before switching
-      tabs[activeTab] = editor.state.doc.toString();
-      if (activeTab !== tabName) {
-        activeTab = tabName;
-        code = tabs[activeTab]; // Load the selected tab's content
-        editor.dispatch({
-          changes: { from: 0, to: editor.state.doc.length, insert: code },
-        });
-      }
+  function switchTab(tabName) {
+    // Save the current tab's content before switching
+    tabs[activeTab] = editor.state.doc.toString();
+    if (activeTab !== tabName) {
+      activeTab = tabName;
+      code = tabs[activeTab]; // Load the selected tab's content
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: code },
+      });
     }
+  }
 
-    function loadExample(exampleTitle) {
-      // Get the example from the predefined examples list
-      const example = examples.find(e => e.title === exampleTitle);
-      if (example && example.files) {
-        // Merge example tabs into current tabs (overwrite if name exists)
-        tabs = { ...tabs, ...example.files };
-        // Set the first file of the example as the active tab
-        activeTab = Object.keys(example.files)[0];
-        code = tabs[activeTab];
-        editor.dispatch({
-          changes: { 
-            from: 0, 
-            to: editor.state.doc.length, 
-            insert: code 
-          }
-        });
-        dropdownOpen = false;
-      }
-    }
-
-    function closeTab(tabName) {
-      if (Object.keys(tabs).length > 1) {
-        const updatedTabs = { ...tabs }; // Create a copy of the tabs object
-        delete updatedTabs[tabName]; // Remove the tab
-        tabs = updatedTabs; // Update the tabs object
-  
-        if (activeTab === tabName) {
-          activeTab = Object.keys(tabs)[0]; // Switch to the first available tab
-          code = tabs[activeTab]; // Update the editor content
-          editor.dispatch({
-            changes: { from: 0, to: editor.state.doc.length, insert: code }
-          });
+  function loadExample(exampleTitle) {
+    // Get the example from the predefined examples list
+    const example = examples.find(e => e.title === exampleTitle);
+    if (example && example.files) {
+      // Merge example tabs into current tabs (overwrite if name exists)
+      tabs = { ...tabs, ...example.files };
+      // Set the first file of the example as the active tab
+      activeTab = Object.keys(example.files)[0];
+      code = tabs[activeTab];
+      editor.dispatch({
+        changes: { 
+          from: 0, 
+          to: editor.state.doc.length, 
+          insert: code 
         }
-      } else {
-        alert("At least one tab must remain open.");
-      }
+      });
+      dropdownOpen = false;
     }
+  }
 
-    function addTab() {
-      let newTabIndex = 1;
-      while (tabs[`Tab${newTabIndex}.py`] !== undefined) {
-        newTabIndex++; // Find the next available unique tab name
-      }
-      const newTabName = `Tab${newTabIndex}.py`;
-      tabs = { ...tabs, [newTabName]: "" }; 
-      activeTab = newTabName; // Set the new tab as active
+  function closeTab(tabName) {
+    if (Object.keys(tabs).length > 1) {
+      const updatedTabs = { ...tabs }; // Create a copy of the tabs object
+      delete updatedTabs[tabName]; // Remove the tab
+      tabs = updatedTabs; // Update the tabs object
+  
+    if (activeTab === tabName) {
+      activeTab = Object.keys(tabs)[0]; // Switch to the first available tab
       code = tabs[activeTab]; // Update the editor content
       editor.dispatch({
         changes: { from: 0, to: editor.state.doc.length, insert: code }
       });
     }
-
-    function renameActiveTab() {
-      const newTabName = prompt("Enter new name for the active tab:", activeTab);
-      if (newTabName && newTabName !== activeTab && !tabs[newTabName]) {
-        const updatedTabs = { ...tabs };
-        updatedTabs[newTabName] = updatedTabs[activeTab];
-        delete updatedTabs[activeTab];
-        tabs = updatedTabs;
-        activeTab = newTabName;
-      } else if (tabs[newTabName]) {
-        alert("A tab with this name already exists.");
-      }
+    } else {
+      alert("At least one tab must remain open.");
     }
+  }
 
-    // Enable horizontal scrolling with the mouse wheel
-    function tabScrollHandler() {
-      const tabContainer = document.querySelector(".tab-container");
-      if (tabContainer) {
-        tabContainer.addEventListener("wheel", (event) => {
-          if (event.deltaY !== 0) {
-            event.preventDefault();
-            tabContainer.scrollLeft += event.deltaY;
-          }
-        });
-      }
+  function addTab() {
+    let newTabIndex = 1;
+    while (tabs[`Tab${newTabIndex}.py`] !== undefined) {
+      newTabIndex++; // Find the next available unique tab name
     }
+    const newTabName = `Tab${newTabIndex}.py`;
+    tabs = { ...tabs, [newTabName]: "" }; 
+    activeTab = newTabName; // Set the new tab as active
+    code = tabs[activeTab]; // Update the editor content
+    editor.dispatch({
+      changes: { from: 0, to: editor.state.doc.length, insert: code }
+    });
+  }
 
-    function getTabData() {
-      const savedTabs = localStorage.getItem("tabs_data");
-      if (savedTabs) {
-        tabs = JSON.parse(savedTabs); // Parse the JSON string back into an object
-        activeTab = Object.keys(tabs)[0]; // Set the first tab as active
-        code = tabs[activeTab]; // Load the content of the active tab
-      }
+  function renameActiveTab() {
+    const newTabName = prompt("Enter new name for the active tab:", activeTab);
+    if (newTabName && newTabName !== activeTab && !tabs[newTabName]) {
+      const updatedTabs = { ...tabs };
+      updatedTabs[newTabName] = updatedTabs[activeTab];
+      delete updatedTabs[activeTab];
+      tabs = updatedTabs;
+      activeTab = newTabName;
+    } else if (tabs[newTabName]) {
+      alert("A tab with this name already exists.");
     }
+  }
 
-    onMount(() => {
-      // Load linting preference from localStorage
-      const lintPref = localStorage.getItem('linting_enabled');
-      if (lintPref !== null) {
-        lintingEnabled = lintPref === 'true';
-      }
-      
-      // Load tabs from local storage
-      window.addEventListener("beforeunload", function () {
-        saveCode();
-        stopExecution();
+  // Enable horizontal scrolling with the mouse wheel
+  function tabScrollHandler() {
+    const tabContainer = document.querySelector(".tab-container");
+    if (tabContainer) {
+      tabContainer.addEventListener("wheel", (event) => {
+        if (event.deltaY !== 0) {
+          event.preventDefault();
+          tabContainer.scrollLeft += event.deltaY;
+        }
       });
+    }
+  }
 
-      getTabData();   // Load the tabs from local storage
-      createEditor(); // Load the editor
-      startupBackend();
-      tabScrollHandler();
+  function getTabData() {
+    const savedTabs = localStorage.getItem("tabs_data");
+    if (savedTabs) {
+      tabs = JSON.parse(savedTabs); // Parse the JSON string back into an object
+      activeTab = Object.keys(tabs)[0]; // Set the first tab as active
+      code = tabs[activeTab]; // Load the content of the active tab
+    }
+  }
+
+  onMount(() => {
+      // Load linting preference from localStorage
+    const lintPref = localStorage.getItem('linting_enabled');
+    if (lintPref !== null) {
+      lintingEnabled = lintPref === 'true';
+    }
+
+    // Load tabs from local storage
+    window.addEventListener("beforeunload", function () {
+      saveCode();
+      stopExecution();
     });
 
-    onDestroy(() => {
-        window.removeEventListener("beforeunload", function () {
-            saveCode();
-            stopExecution();
-        });
+    getTabData();   // Load the tabs from local storage
+    createEditor(); // Load the editor
+    startupBackend();
+    tabScrollHandler();
+  });
+
+  onDestroy(() => {
+    window.removeEventListener("beforeunload", function () {
+      saveCode();
+      stopExecution();
     });
+  });
 
   async function startupBackend() {
     try {
-        const response = await fetch('/api/startup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({}), 
-            credentials: 'include'
-        });
+      const response = await fetch('/api/startup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({}), 
+        credentials: 'include'
+      });
 
-        const result = await response.json();
-        if (result.status === 'success') {
-            console.log(result.message); 
-        } else {
-            console.error('Error:', result.message);
-        }
+      const result = await response.json();
+      if (result.status === 'success') {
+        console.log(result.message); 
+      } else {
+        console.error('Error:', result.message);
+      }
     } catch (e) {
-        console.error('Failed to startup server backend:', e);
+      console.error('Failed to startup server backend:', e);
     }
   }  
 
   async function saveTabs() {
     try {
-        const response = await fetch('/api/save-tabs', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ tabs }),
-            credentials: 'include'
-        });
+      const response = await fetch('/api/save-tabs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tabs }),
+        credentials: 'include'
+      });
 
-        const result = await response.json();
-        if (result.status !== 'success') {
-            console.error('Error saving tabs:', result.message);
-            alert('Error saving tabs: ' + result.message);
-            return false;
-        }
-
-        console.log('Tabs saved successfully in the container.');
-        return true;
-    } catch (e) {
-        console.error('Failed to save tabs to container:', e);
+      const result = await response.json();
+      if (result.status !== 'success') {
+        console.error('Error saving tabs:', result.message);
+        alert('Error saving tabs: ' + result.message);
         return false;
+      }
+
+      console.log('Tabs saved successfully in the container.');
+      return true;
+    } catch (e) {
+      console.error('Failed to save tabs to container:', e);
+      return false;
     }
-}
+  }
 
   async function executeCode() {
     isExecuting = true;
@@ -287,14 +287,14 @@
     
       const result = await response.json();
 
-        console.log("Status of execution response: ", result.status);
-        if (result.status === "success") {
-            output_html = result.output_html;
-            output_non_html = result.output_non_html;
-            error = "";
-        } else {
-            error = result.message || "An unknown error occurred";
-        }
+      console.log("Status of execution response: ", result.status);
+      if (result.status === "success") {
+        output_html = result.output_html;
+        output_non_html = result.output_non_html;
+        error = "";
+      } else {
+        error = result.message || "An unknown error occurred";
+      }
         
     } catch (e) {
       output_html = "";
@@ -306,20 +306,20 @@
   }
 
   async function stopExecution() {
-      try {
-          const response = await fetch('/api/stop', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              credentials: 'include'
-          });
+    try {
+      const response = await fetch('/api/stop', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
 
-          const result = await response.json();
-          return result.message; // Assuming the server returns a message
-      } catch (e) {
-          return "Failed to connect to execution server";
-      }
+      const result = await response.json();
+      return result.message; // Assuming the server returns a message
+    } catch (e) {
+      return "Failed to connect to execution server";
+    }
   }
 
   function toggleLinting() {
