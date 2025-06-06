@@ -10,7 +10,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 
 '''
 Creates session and starts sandbox for user
-is called from svelte post request: 
+    is called from svelte post request: 
     in startup function in script (+page_svelte)
 '''
 @app.route('/api/startup', methods=['POST'])
@@ -26,7 +26,7 @@ def create_session():
 
 '''
 Lints the provided code using Ruff
-is called from svelte post request:
+    is called from svelte post request:
     lintCode function in +page.svelte
 '''
 @app.route('/api/lint', methods=['POST'])
@@ -52,7 +52,7 @@ def lint_code():
 
 '''
 Does arbitrary code execution in user sandbox
-is called fron svelte post request: 
+    is called fron svelte post request: 
     executeCode function in +page.svelte 
     (which intern is called by pressing the execute button)
 '''
@@ -70,7 +70,7 @@ def execute_code():
 
 '''
 Stops sandbox for user session
-is called from svelte post request:
+    called from svelte post request:
 '''
 @app.route('/api/stop', methods=['POST'])
 def stop_sandbox():

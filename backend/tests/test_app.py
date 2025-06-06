@@ -49,7 +49,7 @@ def test_execute_code_success(real_container):
 def test_execute_code_timeout(real_container):
     result = execute_code(USER_ID, "while True:\n  pass")
     assert result["status"] == "error"
-    assert "10-second" in result["message"]  # from Timeout10sec!
+    assert "30-second" in result["message"]  # from Timeout10sec!
 
 def test_execute_code_crash(real_container):
     result = execute_code(USER_ID, "1/0")
