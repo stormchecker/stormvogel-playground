@@ -19,6 +19,7 @@
   let isExecuting = false;
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
+  let showHelp = false;
   let activeTab = "Model.py"; // Track the active tab  
   let tabs = {
       "Model.py": "",
@@ -26,7 +27,9 @@
   };
   let dropdownOpen = false; // Examples dropdown menu
   const githubUrl = 'https://github.com/moves-rwth/stormvogel';
+  const docsUrl = 'https://moves-rwth.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
+
 
   // Save all tabs to local storage
   function saveCode() {
@@ -73,6 +76,10 @@
       document.body.removeChild(a);
     });
   }
+
+    function toggleHelp() {
+      showHelp = !showHelp;
+    }
 
     // Adds code editor with syntax highlighting
     function createEditor() {
@@ -364,6 +371,37 @@
       <a href={githubUrl} target="_blank" rel="noopener noreferrer">
         <img src="github-mark.svg" alt="Github Repo" class="github-logo"/>
       </a>
+      <a href={docsUrl} class=nav-link target="_blank" rel="noopener noreferrer">
+        Documentation
+      </a>
+      <div class=help-container>
+        <div class=help-link 
+              role='button' 
+              tabindex="0" 
+              on:click={toggleHelp} 
+              on:keydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') 
+                  toggleHelp();}}
+        >Help</div>
+        {#if showHelp}
+          <div class="help-box">
+            <button class="close-btn" on:click={toggleHelp} aria-label="Close">x</button>
+            <h3>Few differences from the documentation</h3>
+              <ol>
+                <li>When calling show function, one of the arguments must be: do_init_server=False</li>
+                <li>Prism usage: create filename.prism as another tab, put your prism code there. Example: <br><br>
+                import stormpy <br>
+                prism_code = stormpy.parse_prism_program("Model.prism") <br>
+                prism_die = mapping.from_prism(prism_code) <br>
+                vis3 = show(prism_die,do_init_server=False) <br>
+                print(vis3.generate_html()) <br><br>
+                </li>
+                <li>Custom layout usage: put layout file .json in another tab, use Layout("filename.json")</li>
+              </ol>
+          </div>
+        {/if}
+
+      </div>
     </div>
     <nav>
       <div class="dropdown-container">
@@ -705,7 +743,14 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
+  .nav-link {
+    padding: 0 1em;
+    text-decoration: none;
+    color: #000000;
+    border-right: 1px solid #c9c9c9;
+  }
+
   .dropdown-container {
     position: relative;
     display: inline-block;
@@ -738,4 +783,42 @@
     gap: 20px;
   }
 
+  .help-container {
+    display: inline-block;
+    position: relative;
+  }
+
+  .help-link {
+    color: #000000;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .help-box {
+    position: absolute;
+    top: 140%;
+    left: -200%;
+    z-index: 100;
+    width: 500px;
+    padding: 1em;
+    background-color: #f8f9fa;
+    border-left: 4px solid #007BFF;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 0.5em;
+    right: 0.7em;
+    background: none;
+    border: none;
+    font-size: 1.3em;
+    cursor: pointer;
+    color: #0a0a0a;
+  }
+
+  .close-btn:hover {
+    color: #000;
+  }
 </style>
