@@ -65,23 +65,31 @@ project-root/
 
 ### Testing
 
-To get a coverage report of the frontend run:
-```bash
-npm run coverage 
-```
-To just test the frontend:
-```bash
-npm test
-```
+1. Vitest frontend testing (unit)
+    * In frontend directory
+    * To get a coverage report of the frontend run:
+    ```bash
+    npm run coverage 
+    ```
+    * To just test the frontend:
+    ```bash
+    npm test
+    ```
 
-To run end-to-end tests run playwright:
-```bash
-npm run playwright
-```
-You can also run the tests in ui mode:
-```sh
-npm run playwright:ui
-```
+2. Playwright frontend testing (integration) 
+    * In frontend directory
+    ```bash
+    npm run playwright
+    ```
+    * You can also run the tests in ui mode:
+    ```bash
+    npm run playwright:ui
+    ```
+3. Pytest backend testing (unit)
+    * In backend directory
+    ```bash
+    pytest
+    ```
 
 ---
 
