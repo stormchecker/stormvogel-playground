@@ -1,20 +1,21 @@
-// Helper function to load example files
 async function loadExample(title, files) {
     const loadedFiles = {};
-    for (const [filename, path] of Object.entries(files)) {
-        loadedFiles[filename] = (await import(`./examples/${path}?raw`)).default;
+    for (const [filename, filePath] of Object.entries(files)) {
+        const response = await fetch(`/examples/${filePath}`);
+        loadedFiles[filename] = await response.text();
     }
     return { title, files: loadedFiles };
 }
 
+// Create a manifest file that lists all examples
 export const examples = await Promise.all([
-    loadExample('MDP', {
+    loadExample('MDP Construction', {
         "mdp.py": 'mdp/mdp.py'
     }),
-    loadExample('PGC', {
+    loadExample('PGC Builder', {
         "pgc.py": 'pgc/pgc.py'
     }),
-    loadExample('CTMC', {
+    loadExample('CTMC Construction', {
         "ctmc.py": 'ctmc/ctmc.py'
     }),
     loadExample('Import prism model', {
