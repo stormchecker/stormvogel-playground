@@ -1,34 +1,24 @@
-import fs from 'fs';
-import path from 'path';
-
-function loadExamplesFromFiles() {
-    const examplesDir = './examples';
-    const examples = [];
-    
-    // Get all subdirectories in the examples folder
-    const exampleDirs = fs.readdirSync(examplesDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
-    
-    exampleDirs.forEach(dirName => {
-        const dirPath = path.join(examplesDir, dirName);
-        const files = {};
-        
-        // Read all files in the directory
-        const fileNames = fs.readdirSync(dirPath);
-        fileNames.forEach(fileName => {
-            const filePath = path.join(dirPath, fileName);
-            const fileContent = fs.readFileSync(filePath, 'utf8');
-            files[fileName] = fileContent;
-        });
-        
-        examples.push({
-            title: dirName.toUpperCase(),
-            files: files
-        });
-    });
-    
-    return examples;
+// Helper function to load example files
+async function loadExample(title, files) {
+    const loadedFiles = {};
+    for (const [filename, path] of Object.entries(files)) {
+        loadedFiles[filename] = (await import(`./examples/${path}?raw`)).default;
+    }
+    return { title, files: loadedFiles };
 }
 
-export const examples = loadExamplesFromFiles();
+export const examples = await Promise.all([
+    loadExample('MDP', {
+        "mdp.py": 'mdp/mdp.py'
+    }),
+    loadExample('PGC', {
+        "pgc.py": 'pgc/pgc.py'
+    }),
+    loadExample('CTMC', {
+        "ctmc.py": 'ctmc/ctmc.py'
+    }),
+    loadExample('Import prism model', {
+        "prism_example.py": 'prism/prism_example.py',
+        "prism_example.prism": 'prism/prism_example.prism'
+    })
+]);
