@@ -4,14 +4,62 @@ import re
 import io
 import tarfile
 import subprocess
+import threading
+import time
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 client = docker.from_env()
 
+class ContainerManager:
+    def __init__(self):
+        self.container_timestamps = {}
+        self.cleanup_thread = threading.Thread(target=self._periodic_cleanup, daemon=True)
+        self.cleanup_thread.start()
+    
+    def register_container(self, user_id):
+        """Register when a container was created/accessed"""
+        self.container_timestamps[user_id] = datetime.now()
+    
+    def _periodic_cleanup(self):
+        """Clean up containers older than 1 hour"""
+        while True:
+            try:
+                current_time = datetime.now()
+                expired_users = []
+                
+                for user_id, timestamp in self.container_timestamps.items():
+                    if current_time - timestamp > timedelta(hours=1):
+                        expired_users.append(user_id)
+                
+                for user_id in expired_users:
+                    self._force_cleanup_container(user_id)
+                    del self.container_timestamps[user_id]
+                
+                time.sleep(300)
+            except Exception as e:
+                logger.error("Periodic cleanup failed: %s", e)
+    
+    def _force_cleanup_container(self, user_id):
+        """Force cleanup a specific container"""
+        container_name = f"sandbox_{user_id}"
+        try:
+            container = client.containers.get(container_name)
+            container.stop(timeout=1)
+            container.remove()
+            logger.info("Force cleaned up container for user %s", user_id)
+        except docker.errors.NotFound:
+            pass  # Container already gone
+        except Exception as e:
+            logger.error("Failed to force cleanup container for %s: %s", user_id, e)
+
+container_manager = ContainerManager()
+
 # Either reuses and existing container or creates a new one
 def start_sandbox(user_id):
+    container_manager.register_container(user_id)
     container_name = f"sandbox_{user_id}"
     existing_containers = client.containers.list(filters={"name": container_name})
     logger.info(existing_containers)
