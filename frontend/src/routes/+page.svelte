@@ -369,7 +369,7 @@
     <div class="header-left">
       <h1>Stormvogel Playground</h1>
       <a href={githubUrl} target="_blank" rel="noopener noreferrer">
-        <img src="github-mark.svg" alt="Github Repo" class="github-logo"/>
+        <img src="bird.png" alt="Github Repo" class="github-logo"/>
       </a>
       <a href={docsUrl} class=nav-link target="_blank" rel="noopener noreferrer">
         Documentation
