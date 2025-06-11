@@ -29,7 +29,8 @@ def start_sandbox(user_id):
             tty=True,
             security_opt=["no-new-privileges"],
             network_mode="none",
-            mem_limit="512m"
+            mem_limit="512m",
+            command="sh",
         )
         logger.info(f"Started new sandbox container {container.id} for user {user_id}")
     return container
