@@ -3,6 +3,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 // https://vite.dev/config/
 export default defineConfig({
+    build: {
+        target: "esnext"
+    },
     plugins: [svelte()],
     server: { //proxy to avoid cross origin, this way relative addresses are proxied to backend so it looks same origin to the backend
         //only relavant for npm run dev, deployment uses nginx as a proxy wich will act like same origin
