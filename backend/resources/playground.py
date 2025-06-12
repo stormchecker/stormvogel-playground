@@ -16,7 +16,7 @@ def show(something: any, something_other: any = None) -> str:
     if isinstance(something, stormvogel.Model):
         vis = stormvogel.show(something, something_other, do_init_server=False)
         print(vis.generate_html())
-    elif str(type(something)).startswith("Sparse"):
+    elif str(type(something)).startswith("<class 'stormpy.storage.storage.Sparse"):
         import stormvogel.stormpy_utils.mapping as mapping
         stormvogel_model = mapping.stormpy_to_stormvogel(something)
         vis = stormvogel.show(stormvogel_model, something_other, do_init_server=False)
