@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -30,6 +31,7 @@ def example_exploration_02():
     for state in model.states:
         print("State {} has observation id {}".format(state.id, model.observations[state.id]))
 
+    playground.show(model)
 
 if __name__ == "__main__":
     example_exploration_02()

@@ -1,3 +1,4 @@
+import playground
 import stormpy
 import stormpy.info
 
@@ -41,7 +42,6 @@ def example_parametric_models_02():
     print("Graph preserving constraints:")
     for formula in collector.graph_preserving_constraints:
         print(formula.get_constraint())
-
 
 if __name__ == "__main__":
     example_parametric_models_02()

@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -23,6 +24,7 @@ def example_shortest_paths():
         distance = spg.get_distance(k)
         print("{}-shortest path to state #{}: {}, with distance {}".format(k, state_id, path, distance))
 
+    playground.show(model)
 
 if __name__ == "__main__":
     example_shortest_paths()

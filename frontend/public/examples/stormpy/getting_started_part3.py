@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -18,6 +19,8 @@ def example_getting_started_03():
         print(x)
     initial_state = model.initial_states[0]
     print(result.at(initial_state))
+
+    playground.show(model, result)
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -33,6 +34,8 @@ def example_schedulers_01():
 
     dtmc = model.apply_scheduler(scheduler)
     print(dtmc)
+
+    playground.show(model, result)
 
 
 if __name__ == "__main__":

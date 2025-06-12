@@ -1,3 +1,4 @@
+import playground
 import stormpy
 import stormpy.simulator
 
@@ -66,6 +67,7 @@ def example_simulator_02():
     for path in paths:
         print(" ".join(path))
 
+    playground.show(model)
 
 if __name__ == "__main__":
     example_simulator_02()

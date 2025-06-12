@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -22,6 +23,7 @@ def example_exploration_03():
     sorted = stormpy.topological_sort(model, forward=False)
     print(sorted)
 
+    playground.show(model)
 
 if __name__ == "__main__":
     example_exploration_03()

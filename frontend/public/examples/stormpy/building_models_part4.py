@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -39,6 +40,7 @@ def example_building_models_04():
     constructor = stormpy.make_sparse_model_builder(prism_program, options, stormpy.StateValuationFunctionActionMaskDouble(permissive_policy))
     model = constructor.build()
     print(model)
+    playground.show(model)
 
 
 if __name__ == "__main__":

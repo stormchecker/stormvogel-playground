@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -35,6 +36,8 @@ def example_schedulers_02():
         action = state.actions[action_index]
         print("In state {} ({}) choose action {} ({})".format(state, ", ".join(state.labels), action, ", ".join(action.labels)))
 
+
+    playground.show(mdp, result)
 
 if __name__ == "__main__":
     example_schedulers_02()

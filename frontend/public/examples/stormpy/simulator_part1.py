@@ -1,3 +1,4 @@
+import playground
 import stormpy
 import stormpy.simulator
 
@@ -44,6 +45,7 @@ def example_simulator_01():
         simulator.restart()
     print(", ".join([f"{str(k)}: {v}" for k, v in final_outcomes.items()]))
 
+    playground.show(model)
 
 if __name__ == "__main__":
     example_simulator_01()

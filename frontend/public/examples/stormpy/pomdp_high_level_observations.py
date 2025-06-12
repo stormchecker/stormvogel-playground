@@ -1,3 +1,4 @@
+import playground
 import stormpy
 import stormpy.info
 
@@ -29,6 +30,7 @@ def example_pomdp_highlevel_observations():
     assert pomdp.has_observation_valuations
     assert pomdp.observation_valuations.get_json(0)["o"] == 5
 
+    playground.show(pomdp)
 
 if __name__ == "__main__":
     example_pomdp_highlevel_observations()

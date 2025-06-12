@@ -1,8 +1,9 @@
+import playground
 import stormpy
 
 import stormpy.examples
 import stormpy.examples.files
-
+import playground
 
 def example_analysis_03():
     path = stormpy.examples.files.prism_dtmc_die
@@ -25,6 +26,7 @@ def example_analysis_03():
     result.filter(filter)
     assert result.min == result.max
     print(result.min)
+    playground.show(model, result)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
+import playground
 import stormpy
 
 import stormpy.examples
 import stormpy.examples.files
-
 
 def example_analysis_01():
     path = stormpy.examples.files.prism_dtmc_die
@@ -14,6 +14,7 @@ def example_analysis_01():
     prob0E, prob1A = stormpy.prob01min_states(model, properties[0].raw_formula.subformula)
     print(prob0E)
     print(prob1A)
+    playground.show(model)
 
 
 if __name__ == "__main__":

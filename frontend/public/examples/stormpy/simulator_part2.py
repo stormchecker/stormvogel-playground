@@ -1,3 +1,4 @@
+import playground
 import stormpy
 import stormpy.simulator
 
@@ -26,7 +27,6 @@ def example_simulator_03():
         else:
             final_outcomes[observation] += 1
         simulator.restart()
-
 
 if __name__ == "__main__":
     example_simulator_03()

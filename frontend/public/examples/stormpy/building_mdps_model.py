@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 
@@ -93,6 +94,7 @@ def example_building_mdps_01():
     # Build the model
     mdp = stormpy.storage.SparseMdp(components)
     print(mdp)
+    playground.show(mdp)
 
 
 if __name__ == "__main__":

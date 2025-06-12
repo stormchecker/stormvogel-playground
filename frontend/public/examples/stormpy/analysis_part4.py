@@ -1,8 +1,8 @@
+import playground
 import stormpy
 
 import stormpy.examples
 import stormpy.examples.files
-
 
 def example_analysis_04():
     path = stormpy.examples.files.prism_dtmc_die
@@ -22,6 +22,7 @@ def example_analysis_04():
     print("Model checking results:")
     for i in range(len(model.states)):
         print("\tstate #{}\t {}:\t {}".format(i, model.state_valuations.get_string(i), result.at(i)))
+    playground.show(model, result)
 
 
 if __name__ == "__main__":

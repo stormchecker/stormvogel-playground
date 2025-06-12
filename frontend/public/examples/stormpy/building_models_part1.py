@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -30,6 +31,7 @@ def example_building_models_01():
     pomdp = stormpy.build_model_from_drn(stormpy.examples.files.drn_pomdp_maze, opts)
     # POMDPs need to be in a canonic representation
     pomdp = stormpy.pomdp.make_canonic(pomdp)
+    playground.show(pomdp)
 
 
 if __name__ == "__main__":

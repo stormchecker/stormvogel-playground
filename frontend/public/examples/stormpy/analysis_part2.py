@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -41,6 +42,7 @@ def example_analysis_02():
     result.filter(stormpy.create_filter_symbolic(model, expr_for_state_2))
     assert result.min == result.max
     print(result.min)
+    playground.show(model, result)
 
 
 if __name__ == "__main__":

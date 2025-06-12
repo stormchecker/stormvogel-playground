@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 # Check if numpy is available
@@ -53,6 +54,7 @@ def example_building_mas_01():
     # Build the model
     ma = stormpy.storage.SparseMA(components)
     print(ma)
+    playground.show(ma)
 
 
 if __name__ == "__main__":

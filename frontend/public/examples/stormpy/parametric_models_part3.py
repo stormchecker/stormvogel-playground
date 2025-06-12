@@ -1,3 +1,4 @@
+import playground
 import time
 
 import stormpy
@@ -58,7 +59,6 @@ def example_parametric_models_03():
                 t3 += 1
     print(time.time() - start)
     print(t3)
-
 
 if __name__ == "__main__":
     example_parametric_models_03()

@@ -1,4 +1,6 @@
+import playground
 import stormpy
+import playground
 
 # Check if numpy is available
 try:
@@ -48,6 +50,9 @@ def example_building_ctmcs_01():
     ctmc = stormpy.storage.SparseCtmc(components)
 
     print(ctmc)
+
+    playground.show(ctmc)
+
 
 
 if __name__ == "__main__":

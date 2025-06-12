@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 from stormpy import pycarl
@@ -35,6 +36,7 @@ def example_parametric_models_01():
     result = stormpy.model_checking(instantiated_model, properties[0])
     print(result)
 
+    playground.show(instantiated_model, result)
 
 if __name__ == "__main__":
     example_parametric_models_01()

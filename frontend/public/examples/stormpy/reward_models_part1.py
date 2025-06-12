@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -27,6 +28,7 @@ def example_reward_models_01():
     assert len(model.reward_models) == 1
     assert reward_model_name == "coin_flips"
 
+    playground.show(model, result)
 
 if __name__ == "__main__":
     example_reward_models_01()

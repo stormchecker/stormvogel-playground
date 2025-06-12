@@ -1,3 +1,4 @@
+import playground
 import stormpy
 
 import stormpy.examples
@@ -21,6 +22,7 @@ def example_getting_started_04():
             for transition in action.transitions:
                 print("From state {}, with probability {}, go to state {}".format(state, transition.value(), transition.column))
 
+    playground.show(model)
 
 if __name__ == "__main__":
     example_getting_started_04()
