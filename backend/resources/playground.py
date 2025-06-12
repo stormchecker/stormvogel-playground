@@ -18,8 +18,13 @@ def show(something: any, something_other: any = None) -> str:
         print(vis.generate_html())
     elif str(type(something)).startswith("<class 'stormpy.storage.storage.Sparse"):
         import stormvogel.stormpy_utils.mapping as mapping
+        import stormvogel.stormpy_utils.convert_results as convert_results
+
         stormvogel_model = mapping.stormpy_to_stormvogel(something)
-        vis = stormvogel.show(stormvogel_model, something_other, do_init_server=False)
+        stormvogel_result = None
+        if something_other is not None:
+            stormvogel_result = convert_results.convert_model_checking_result(stormvogel_model, something_other)
+        vis = stormvogel.show(stormvogel_model, stormvogel_result, do_init_server=False)
         print(vis.generate_html())
     elif isinstance(something, str) and os.path.isfile(something):
         ext = os.path.splitext(something)[1].lower()
