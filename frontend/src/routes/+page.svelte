@@ -805,7 +805,7 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    max-height: 700px;
+    max-height: 90vh;
     overflow-y: auto;
     overflow-x: hidden;
   }
