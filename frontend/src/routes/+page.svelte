@@ -26,10 +26,25 @@
       "Model.prism": "",
   };
   let dropdownOpen = false; // Examples dropdown menu
+  let expandedCategories = {}; // Track which categories are expanded
   const githubUrl = 'https://github.com/moves-rwth/stormvogel';
   const docsUrl = 'https://moves-rwth.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
 
+  // Group examples by category
+  $: groupedExamples = examples.reduce((acc, example) => {
+    const category = example.category || 'Uncategorized';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(example);
+    return acc;
+  }, {});
+
+  function toggleCategory(category) {
+    expandedCategories[category] = !expandedCategories[category];
+    expandedCategories = { ...expandedCategories }; // Trigger reactivity
+  }
 
   // Save all tabs to local storage
   function saveCode() {
@@ -286,7 +301,6 @@
       });
     
       const result = await response.json();
-
       console.log("Status of execution response: ", result.status);
       if (result.status === "success") {
         output_html = result.output_html;
@@ -412,9 +426,30 @@
 
         {#if dropdownOpen}
           <div class="dropdown-menu">
-            {#each examples as example}
-              <button class="nav-btn"
-                on:click={() => loadExample(example.title)}>{example.title}</button>
+            {#each Object.entries(groupedExamples) as [category, categoryExamples]}
+              <div class="category-section">
+                <div class="category-header"
+                  on:click={() => toggleCategory(category)}
+                  on:keydown={(e) => e.key === 'Enter' && toggleCategory(category)}
+                  role="button"
+                  tabindex="0">
+                  <span class="category-title">{category}</span>
+                  <span class="category-arrow" class:expanded={expandedCategories[category]}>
+                    ▼
+                  </span>
+                </div>
+                
+                {#if expandedCategories[category]}
+                  <div class="category-examples">
+                    {#each categoryExamples as example}
+                      <button class="nav-btn example-btn"
+                        on:click={() => loadExample(example.title)}>
+                        {example.title}
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
             {/each}
           </div>
         {/if}
@@ -766,6 +801,64 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+  }
+
+  .category-section {
+    border-bottom: 1px solid #eee;
+  }
+
+  .category-section:last-child {
+    border-bottom: none;
+  }
+
+  .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .category-header:hover {
+    background-color: #e9ecef;
+  }
+
+  .category-title {
+    font-size: 14px;
+    color: #495057;
+  }
+
+  .category-arrow {
+    transition: transform 0.2s ease;
+    font-size: 12px;
+    color: #6c757d;
+  }
+
+  .category-arrow.expanded {
+    transform: rotate(180deg);
+  }
+
+  .category-examples {
+    background-color: #fff;
+  }
+
+  .example-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .example-btn:hover {
+    background-color: #f8f9fa;
   }
 
   .btn-examples {
