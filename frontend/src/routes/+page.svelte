@@ -786,21 +786,28 @@
     border-right: 1px solid #c9c9c9;
   }
 
+  .example-btn {
+    color: #000000;
+  }
+
   .dropdown-container {
     position: relative;
     display: inline-block;
   }
 
   .dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-    min-width: 100%;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      min-width: 100%;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      /* Add these properties for scrolling */
+      max-height: 300px; /* Set a maximum height */
+      overflow-y: auto; /* Enable vertical scrolling */
   }
 
   .category-section {
@@ -819,7 +826,6 @@
     cursor: pointer;
     background-color: #f8f9fa;
     border: none;
-    width: 100%;
     text-align: left;
     font-weight: 600;
   }
