@@ -796,18 +796,19 @@
   }
 
   .dropdown-menu {
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      min-width: 100%;
-      display: flex;
-      flex-direction: column;
-      box-sizing: border-box;
-      /* Add these properties for scrolling */
-      max-height: 300px; /* Set a maximum height */
-      overflow-y: auto; /* Enable vertical scrolling */
+    position: fixed;
+    top: 100%;
+    left: 0;
+    width: 100vw;
+    max-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    z-index: 10;
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    transform: none;
   }
 
   .category-section {
