@@ -111,7 +111,7 @@ The memory limit can also be changed as it is qutie low (256MB) right now.
 ---
 
 ## 📜 License 
-This project is licensed under the [TODO](LICENSE).
+This project is licensed under the [GPL-3.0 license](LICENSE).
 
 ---
 
