@@ -35,13 +35,19 @@ project-root/
 1. install docker: deamon and cli (or docker-desktop :) https://docs.docker.com/engine/install/ubuntu/ )
    also install Gvisor: https://gvisor.dev/docs/user_guide/install/
    To get the docker image we now only need to call this :
-   ```bash
-   docker pull stormvogel/stormvogel
-   ```
+```bash
+docker pull stormvogel/stormvogel
+```
 
 2. Install backend dependencies (probably want to use a pip or conda environment):
-    ```bash
-    pip install requirements.txt
+```bash
+pip install requirements.txt
+```
+
+3. Create an environment file with a secret key in `backend/.env`:
+```bash
+python3 -c "import secrets; print(f'FLASK_SECRET_KEY=\"{secrets.token_urlsafe(32)}\"')" > backend/.env
+```
 
 ### **Frontend Setup (Svelte)**
 1. Install flask:
