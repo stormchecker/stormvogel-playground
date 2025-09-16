@@ -8,7 +8,7 @@ import threading
 import time
 from datetime import datetime, timedelta
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 client = docker.from_env()
