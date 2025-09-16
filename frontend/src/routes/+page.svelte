@@ -26,8 +26,8 @@
       "Model.prism": "",
   };
   let dropdownOpen = false; // Examples dropdown menu
-  const githubUrl = 'https://github.com/moves-rwth/stormvogel';
-  const docsUrl = 'https://moves-rwth.github.io/stormvogel/';
+  const githubUrl = 'https://github.com/stormchecker/stormvogel';
+  const docsUrl = 'https://stormchecker.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
 
 
