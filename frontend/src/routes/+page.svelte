@@ -20,15 +20,38 @@
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
   let showHelp = false;
-  let activeTab = "Model.py"; // Track the active tab  
+  let activeTab = "welcome.py"; // Track the active tab  
   let tabs = {
-      "Model.py": "",
-      "Model.prism": "",
+    "welcome.py": `# Welcome to the Stormvogel playground!
+# Here is a small snippet to get you started:
+from stormvogel import *
+from stormvogel.bird import *
+from playground import show
+
+# This function describes the transition relation
+def delta(state):
+    return [
+        (1/2, (state + 1) % 5),
+        (1/2, (state - 1) % 5)
+    ]
+def rewards(state):
+    return {"R": state / 5}
+
+model = build_bird(
+    delta, init=0, rewards=rewards, modeltype=ModelType.DTMC
+)
+# Modify the model directly
+model.get_state_by_name("4").add_label("goal")
+# Perform model checking using Storm
+result = model_checking(model, "R=? [F \"goal\"]")
+
+# Interactive visualization
+show(model, result)`,
   };
   let dropdownOpen = false; // Examples dropdown menu
   let expandedCategories = {}; // Track which categories are expanded
-  const githubUrl = 'https://github.com/moves-rwth/stormvogel';
-  const docsUrl = 'https://moves-rwth.github.io/stormvogel/';
+  const githubUrl = 'https://github.com/stormchecker/stormvogel';
+  const docsUrl = 'https://stormchecker.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
 
   // Group examples by category
@@ -202,6 +225,8 @@
       tabs = JSON.parse(savedTabs); // Parse the JSON string back into an object
       activeTab = Object.keys(tabs)[0]; // Set the first tab as active
       code = tabs[activeTab]; // Load the content of the active tab
+    } else {
+      code = tabs[activeTab];
     }
   }
 
