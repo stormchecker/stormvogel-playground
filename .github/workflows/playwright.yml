@@ -79,6 +79,10 @@ jobs:
         run: |
             echo "Downloading stormvogel image..."
             docker pull stormvogel/stormvogel
+      
+      - name: Generate secret key
+        run: |
+          python3 -c "import secrets; print(f'FLASK_SECRET_KEY=\"{secrets.token_urlsafe(32)}\"')" > backend/.env
 
       - name: Run Playwright tests
         run: npx playwright test
