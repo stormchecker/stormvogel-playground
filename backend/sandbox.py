@@ -97,10 +97,10 @@ def separate_html(text):
     return html_content, non_html_content
 
 # Write code to a temporary file and send that to the container
-def write_to_file(code, container):
+def write_to_file(filename, code, container):
     tarstream = io.BytesIO()
     with tarfile.TarFile(fileobj=tarstream, mode="w") as tar:
-        tarinfo = tarfile.TarInfo("script.py")
+        tarinfo = tarfile.TarInfo(filename)
         tarinfo.size = len(code.encode())
         tar.addfile(tarinfo, io.BytesIO(code.encode()))
 
@@ -130,7 +130,12 @@ def execute_code(user_id, code):
 
         logger.debug(f"Executing code for {user_id}: {repr(code)}")
         
-        write_to_file(code, container)
+        write_to_file("script.py", code, container)
+
+        # Read the content from resources/playground.py and write it into the container
+        with open("resources/playground.py", "r", encoding="utf-8") as f:
+            playground_code = f.read()
+            write_to_file("playground.py", playground_code, container)
 
         # Container.exec_run does not have an timeout, so we use subprocess here
         # exec_result = container.exec_run(

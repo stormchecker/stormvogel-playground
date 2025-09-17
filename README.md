@@ -123,5 +123,5 @@ This project is licensed under the [GPL-3.0 license](LICENSE).
 
 ## 🔗 Links
 - Storm model checker: [Storm](https://www.stormchecker.org/)
-- Stormpy python bindings: [Stormpy](https://github.com/moves-rwth/stormpy)
-- Stormvogel: [Stormvogel](https://github.com/moves-rwth/stormvogel)
+- Stormpy python bindings: [Stormpy](https://github.com/stormchecker/stormpy)
+- Stormvogel: [Stormvogel](https://github.com/stormchecker/stormvogel)

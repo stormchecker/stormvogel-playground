@@ -20,16 +20,54 @@
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
   let showHelp = false;
-  let activeTab = "Model.py"; // Track the active tab  
+  let activeTab = "welcome.py"; // Track the active tab  
   let tabs = {
-      "Model.py": "",
-      "Model.prism": "",
+    "welcome.py": `# Welcome to the Stormvogel playground!
+# Here is a small snippet to get you started:
+from stormvogel import *
+from stormvogel.bird import *
+from playground import show
+
+# This function describes the transition relation
+def delta(state):
+    return [
+        (1/2, (state + 1) % 5),
+        (1/2, (state - 1) % 5)
+    ]
+def rewards(state):
+    return {"R": state / 5}
+
+model = build_bird(
+    delta, init=0, rewards=rewards, modeltype=ModelType.DTMC
+)
+# Modify the model directly
+model.get_state_by_name("4").add_label("goal")
+# Perform model checking using Storm
+result = model_checking(model, "R=? [F \\"goal\\"]")
+
+# Interactive visualization
+show(model, result)`,
   };
   let dropdownOpen = false; // Examples dropdown menu
+  let expandedCategories = {}; // Track which categories are expanded
   const githubUrl = 'https://github.com/stormchecker/stormvogel';
   const docsUrl = 'https://stormchecker.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
 
+  // Group examples by category
+  $: groupedExamples = examples.reduce((acc, example) => {
+    const category = example.category || 'Uncategorized';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(example);
+    return acc;
+  }, {});
+
+  function toggleCategory(category) {
+    expandedCategories[category] = !expandedCategories[category];
+    expandedCategories = { ...expandedCategories }; // Trigger reactivity
+  }
 
   // Save all tabs to local storage
   function saveCode() {
@@ -187,6 +225,8 @@
       tabs = JSON.parse(savedTabs); // Parse the JSON string back into an object
       activeTab = Object.keys(tabs)[0]; // Set the first tab as active
       code = tabs[activeTab]; // Load the content of the active tab
+    } else {
+      code = tabs[activeTab];
     }
   }
 
@@ -286,7 +326,6 @@
       });
     
       const result = await response.json();
-
       console.log("Status of execution response: ", result.status);
       if (result.status === "success") {
         output_html = result.output_html;
@@ -412,9 +451,30 @@
 
         {#if dropdownOpen}
           <div class="dropdown-menu">
-            {#each examples as example}
-              <button class="nav-btn"
-                on:click={() => loadExample(example.title)}>{example.title}</button>
+            {#each Object.entries(groupedExamples) as [category, categoryExamples]}
+              <div class="category-section">
+                <div class="category-header"
+                  on:click={() => toggleCategory(category)}
+                  on:keydown={(e) => e.key === 'Enter' && toggleCategory(category)}
+                  role="button"
+                  tabindex="0">
+                  <span class="category-title">{category}</span>
+                  <span class="category-arrow" class:expanded={expandedCategories[category]}>
+                    ▼
+                  </span>
+                </div>
+                
+                {#if expandedCategories[category]}
+                  <div class="category-examples">
+                    {#each categoryExamples as example}
+                      <button class="nav-btn example-btn"
+                        on:click={() => loadExample(example.title)}>
+                        {example.title}
+                      </button>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
             {/each}
           </div>
         {/if}
@@ -751,6 +811,10 @@
     border-right: 1px solid #c9c9c9;
   }
 
+  .example-btn {
+    color: #000000;
+  }
+
   .dropdown-container {
     position: relative;
     display: inline-block;
@@ -766,6 +830,66 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .category-section {
+    border-bottom: 1px solid #eee;
+  }
+
+  .category-section:last-child {
+    border-bottom: none;
+  }
+
+  .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border: none;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .category-header:hover {
+    background-color: #e9ecef;
+  }
+
+  .category-title {
+    font-size: 14px;
+    color: #495057;
+  }
+
+  .category-arrow {
+    transition: transform 0.2s ease;
+    font-size: 12px;
+    color: #6c757d;
+  }
+
+  .category-arrow.expanded {
+    transform: rotate(180deg);
+  }
+
+  .category-examples {
+    background-color: #fff;
+  }
+
+  .example-btn {
+    width: 100%;
+    text-align: left;
+    padding: 8px 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .example-btn:hover {
+    background-color: #f8f9fa;
   }
 
   .btn-examples {
