@@ -47,7 +47,6 @@ def lint_code():
             return jsonify({"error": result["message"]})
 
     except Exception as e:
-        print(f"Linting failed: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 '''
@@ -97,7 +96,6 @@ def save_tabs():
         result = sandbox.save_tabs(session["user_id"], tabs)
         return jsonify(result), 200
     except Exception as e:
-        print(f"Failed to save tabs: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 # Only used for development, deployment uses gunicorn which ignores this

@@ -93,6 +93,7 @@ staticfiles/
 .env
 .env.*
 .envrc
+**/.env
 
 # Playwright
 node_modules/
