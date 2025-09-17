@@ -15,8 +15,8 @@ export const examples = await Promise.all([
     loadExample('stormvogel', 'MDP Construction', {
         "mdp.py": 'mdp/mdp.py'
     }),
-    loadExample('stormvogel', 'PGC Builder', {
-        "pgc.py": 'pgc/pgc.py'
+    loadExample('stormvogel', 'Bird Builder', {
+        "bird.py": 'bird/bird.py'
     }),
     loadExample('stormvogel', 'CTMC Construction', {
         "ctmc.py": 'ctmc/ctmc.py'
