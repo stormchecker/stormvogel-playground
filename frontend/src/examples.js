@@ -1,8 +1,11 @@
 async function loadExample(category, title, files) {
     const loadedFiles = {};
     for (const [filename, filePath] of Object.entries(files)) {
-        const response = await import(`/examples/${filePath}?raw`);
-        loadedFiles[filename] = response.default;
+        try {
+            const response = await fetch(`./examples/${filePath}`);
+            loadedFiles[filename] = await response.text();
+        } catch (error) {
+        }
     }
     return { title, category: category, files: loadedFiles };
 }
