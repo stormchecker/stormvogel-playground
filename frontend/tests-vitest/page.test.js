@@ -78,6 +78,9 @@ describe('Page Component', () => {
   test('saves non-empty code to local storage', async () => {
     render(Page);
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
+    fireEvent.input(codeEditor, { target: { textContent: '' } });
+    // Delete all of the existing content
+    fireEvent.paste(codeEditor, { clipboardData: { getData: () => '' } });
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
 
     const saveButton = screen.getByText('Save');
@@ -85,20 +88,22 @@ describe('Page Component', () => {
 
     // Check if the code was saved to local storage
     const savedCode = localStorage.getItem('tabs_data');
-    expect(savedCode).toBe('{"Model.py":"print(\\"Hello, World!\\")","Model.prism":""}'); // Assuming the initial code is an empty string
+    expect(savedCode).toBe('{"welcome.py":"print(\\"Hello, World!\\")"}'); // Assuming the initial code is an empty string
   });
 
   test('saves empty code to local storage', async () => {
     render(Page);
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
     fireEvent.input(codeEditor, { target: { textContent: '' } });
+    // Delete all of the existing content
+    fireEvent.paste(codeEditor, { clipboardData: { getData: () => '' } });
 
     const saveButton = screen.getByText('Save');
     fireEvent.click(saveButton);
 
     // Check if the code was saved to local storage
     const savedCode = localStorage.getItem('tabs_data');
-    expect(savedCode).toBe('{"Model.py":"","Model.prism":""}');
+    expect(savedCode).toBe('{"welcome.py":""}');
   });
 
   test('executes code and displays output', async () => {
@@ -119,6 +124,8 @@ describe('Page Component', () => {
 
     // Simulate entering code in the CodeMirror editor
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
+    // Clear existing content and paste new code
+    fireEvent.input(codeEditor, { target: { textContent: '' } });
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
 
     // Click the execute button
