@@ -5,7 +5,7 @@ import os
 import io
 import matplotlib.figure
 
-def show(something: any, something_other: any = None) -> str:
+def show(something: any, something_other: any = None, **kwargs) -> str:
     """
     Convert the input to HTML for display in the playground.
     """
@@ -14,7 +14,7 @@ def show(something: any, something_other: any = None) -> str:
         return f"<!DOCTYPE html>\n<html>{html}</html>"
 
     if isinstance(something, stormvogel.Model):
-        vis = stormvogel.show(something, something_other, do_init_server=False)
+        vis = stormvogel.show(something, something_other, do_init_server=False, **kwargs)
         print(vis.generate_html())
     elif str(type(something)).startswith("<class 'stormpy.storage.storage.Sparse"):
         import stormvogel.stormpy_utils.mapping as mapping
@@ -24,7 +24,7 @@ def show(something: any, something_other: any = None) -> str:
         stormvogel_result = None
         if something_other is not None:
             stormvogel_result = convert_results.convert_model_checking_result(stormvogel_model, something_other)
-        vis = stormvogel.show(stormvogel_model, stormvogel_result, do_init_server=False)
+        vis = stormvogel.show(stormvogel_model, stormvogel_result, do_init_server=False, **kwargs)
         print(vis.generate_html())
     elif isinstance(something, str) and os.path.isfile(something):
         ext = os.path.splitext(something)[1].lower()
