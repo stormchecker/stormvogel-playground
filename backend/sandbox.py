@@ -117,7 +117,6 @@ def execute_code(user_id, code):
     
     try:
         container = client.containers.get(container_name)
-        container.restart(timeout=0)
 
         exec_results = container.exec_run("pgrep -fa python")
         exec_output = exec_results.output.decode()
@@ -153,6 +152,8 @@ def execute_code(user_id, code):
         output = result.stdout + result.stderr
         exit_code = result.returncode
 
+        container.restart(timeout=0)
+
         if exit_code == 124:  # 124 is the exit code for bash timeout command
             logger.debug("Execution timed out!")
             return {"status": "error", "message": "Execution exceeded 30-second time limit, force quit"}
@@ -181,7 +182,6 @@ def lint_code(user_id, code):
     
     try:
         container = client.containers.get(container_name)
-        container.restart(timeout=0)
 
         logger.debug(f"Linting code for {user_id}: {repr(code)}")
         
@@ -193,6 +193,8 @@ def lint_code(user_id, code):
         exec_result = container.exec_run(["ruff", "check", "--no-fix", file_path], stdout=True, stderr=True)
         output = exec_result.output.decode()
         logger.debug(f"Linting output: exit_code={exec_result.exit_code}, output={output}")
+
+        container.restart(timeout=0)
 
         if exec_result.exit_code == 0:
             return {"status": "success", "lint_output": output.strip()}
