@@ -3,9 +3,9 @@ from playground import show
 
 def available_actions(s):
     if s == "init": # Either study or not
-        return [["study"], ["don't study"]]
+        return ["study", "don't study"]
     else: # Otherwise, we have no choice (DTMC-like behavior)
-        return [[]]
+        return [""]
 
 def delta(s, a):
     if "study" in a:

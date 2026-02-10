@@ -36,14 +36,16 @@ def delta(state):
     ]
 def rewards(state):
     return {"R": state / 5}
+def labels(state):
+    return str(state)
 
 model = build_bird(
-    delta, init=0, rewards=rewards, modeltype=ModelType.DTMC
+    delta, init=0, labels=labels, rewards=rewards, modeltype=ModelType.DTMC
 )
 # Modify the model directly
-model.get_state_by_name("4").add_label("goal")
+model.get_states_with_label("4")[0].add_label("goal")
 # Perform model checking using Storm
-result = model_checking(model, "R=? [F \\"goal\\"]")
+result = model_checking(model, "R=? [F \"goal\"]")
 
 # Interactive visualization
 show(model, result)`,
