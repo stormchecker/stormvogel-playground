@@ -45,7 +45,7 @@ model = build_bird(
 # Modify the model directly
 model.get_states_with_label("4")[0].add_label("goal")
 # Perform model checking using Storm
-result = model_checking(model, "R=? [F \"goal\"]")
+result = model_checking(model, "R=? [F \\\"goal\\\"]")
 
 # Interactive visualization
 show(model, result)`,
