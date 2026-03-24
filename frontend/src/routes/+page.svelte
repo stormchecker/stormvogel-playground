@@ -9,6 +9,7 @@
   import { parseLintErrors } from '../utils';
   import JSZip from "jszip"; // Import JSZip for creating zip files
   import { examples } from  '../examples.js';
+  import LZString from 'lz-string';
 
   let code = "";
   let output_html = "";
@@ -95,8 +96,13 @@ show(model, result)`,
 
   function shareCode() {
     tabs[activeTab] = editor.state.doc.toString();
-    const encoded = btoa(encodeURIComponent(JSON.stringify({ tabs, activeTab })));
-    const url = `${window.location.origin}${window.location.pathname}?workspace=${encoded}`;
+    const params = new URLSearchParams();
+    params.set('active', activeTab);
+    Object.entries(tabs).forEach(([name, content], i) => {
+      params.set(`tab${i}`, name);
+      params.set(`code${i}`, LZString.compressToEncodedURIComponent(content));
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(url).then(() => {
       shareToast = true;
       setTimeout(() => { shareToast = false; }, 3000);
@@ -260,12 +266,19 @@ show(model, result)`,
 
     // Check for shared workspace in URL params
     const params = new URLSearchParams(window.location.search);
-    const sharedWorkspace = params.get('workspace');
-    if (sharedWorkspace) {
+    const sharedActive = params.get('active');
+    if (sharedActive) {
       try {
-        const { tabs: sharedTabs, activeTab: sharedActiveTab } = JSON.parse(decodeURIComponent(atob(sharedWorkspace)));
+        const sharedTabs = {};
+        let i = 0;
+        while (params.has(`tab${i}`)) {
+          const name = params.get(`tab${i}`);
+          const content = LZString.decompressFromEncodedURIComponent(params.get(`code${i}`));
+          sharedTabs[name] = content;
+          i++;
+        }
         tabs = sharedTabs;
-        activeTab = sharedActiveTab;
+        activeTab = sharedActive;
         code = tabs[activeTab];
       } catch (e) {
         console.error('Failed to decode shared workspace:', e);
