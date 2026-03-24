@@ -97,3 +97,5 @@ print(f"Cooperative (best case): {result.at(orchard_storm.initial_states[0]):.4f
 task.set_uncertainty_resolution_mode(stormpy.UncertaintyResolutionMode.ROBUST)
 result = stormpy.check_interval_mdp(orchard_storm, task, env)
 print(f"Robust (worst case):     {result.at(orchard_storm.initial_states[0]):.4f}")
+
+show(orchard)

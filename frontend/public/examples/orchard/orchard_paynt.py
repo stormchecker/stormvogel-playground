@@ -3,7 +3,7 @@ import paynt
 
 # Load and build the full Prism Orchard model with state valuations
 prism_program = stormpy.parse_prism_program("orchard_stormvogel.pm")
-constants = "NUM_FRUIT=4, DISTANCE_RAVEN=5"
+constants = "NUM_FRUIT=2, DISTANCE_RAVEN=2"
 prism_program = stormpy.preprocess_symbolic_input(prism_program, [], constants)[0].as_prism_program()
 options = stormpy.BuilderOptions()
 options.set_build_state_valuations()
