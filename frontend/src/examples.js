@@ -18,9 +18,6 @@ export const examples = await Promise.all([
     loadExample('stormvogel', 'Bird Builder', {
         "bird.py": 'bird/bird.py'
     }),
-    loadExample('stormvogel', 'CTMC Construction', {
-        "ctmc.py": 'ctmc/ctmc.py'
-    }),
     loadExample('stormvogel', 'Import prism model', {
         "prism_example.py": 'prism/prism_example.py',
         "prism_example.prism": 'prism/prism_example.prism'
