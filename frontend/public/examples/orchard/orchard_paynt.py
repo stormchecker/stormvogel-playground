@@ -61,12 +61,13 @@ if result.success:
     import io
     import matplotlib.pyplot as plt
     import matplotlib.image as mpimg
+    from playground import show
 
-    # Render decision tree via graphviz and display as image
+    # Render decision tree via graphviz, embed in a matplotlib figure, display via playground
     png_bytes = result.tree.to_graphviz().pipe(format='png')
     img = mpimg.imread(io.BytesIO(png_bytes))
-    plt.figure(figsize=(10, 6))
-    plt.imshow(img)
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.imshow(img)
+    ax.axis('off')
+    fig.tight_layout()
+    show(fig)
