@@ -18,7 +18,8 @@
   let lintErrors = [];
   let isExecuting = false;
   let saveStatus = 'idle'; // Variable for checking the save status
-  let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully 
+  let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully
+  let shareToast = false; // Show a pop-up ('toast') when the share link is copied
   let showHelp = false;
   let activeTab = "welcome.py"; // Track the active tab  
   let tabs = {
@@ -90,6 +91,18 @@ show(model, result)`,
       console.error("Failed to save tabs: ", error);
       alert("Error, unable to save tabs.");
     }
+  }
+
+  function shareCode() {
+    tabs[activeTab] = editor.state.doc.toString();
+    const encoded = btoa(encodeURIComponent(JSON.stringify({ tabs, activeTab })));
+    const url = `${window.location.origin}${window.location.pathname}?workspace=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      shareToast = true;
+      setTimeout(() => { shareToast = false; }, 3000);
+    }).catch(() => {
+      alert("Share link:\n" + url);
+    });
   }
 
   function exportCode() {
@@ -245,7 +258,22 @@ show(model, result)`,
       stopExecution();
     });
 
-    getTabData();   // Load the tabs from local storage
+    // Check for shared workspace in URL params
+    const params = new URLSearchParams(window.location.search);
+    const sharedWorkspace = params.get('workspace');
+    if (sharedWorkspace) {
+      try {
+        const { tabs: sharedTabs, activeTab: sharedActiveTab } = JSON.parse(decodeURIComponent(atob(sharedWorkspace)));
+        tabs = sharedTabs;
+        activeTab = sharedActiveTab;
+        code = tabs[activeTab];
+      } catch (e) {
+        console.error('Failed to decode shared workspace:', e);
+        getTabData();
+      }
+    } else {
+      getTabData();   // Load the tabs from local storage
+    }
     createEditor(); // Load the editor
     startupBackend();
     tabScrollHandler();
@@ -496,6 +524,10 @@ show(model, result)`,
         class="nav-btn">
         Export
       </button>
+      <button on:click={shareCode}
+        class="nav-btn">
+        Share
+      </button>
     </nav>
   </header>
 
@@ -592,6 +624,11 @@ show(model, result)`,
   {#if saveToast}
     <div class="save-toast" transition:fade>
       The code has been saved successfully
+    </div>
+  {/if}
+  {#if shareToast}
+    <div class="save-toast" transition:fade>
+      Share link copied to clipboard
     </div>
   {/if}
 
