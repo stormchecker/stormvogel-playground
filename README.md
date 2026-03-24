@@ -36,7 +36,7 @@ project-root/
    also install Gvisor: https://gvisor.dev/docs/user_guide/install/
    To get the docker image we now only need to call this :
 ```bash
-docker pull stormvogel/stormvogel
+docker pull stormvogel/stormvogel:nightly
 ```
 
 2. Install backend dependencies (probably want to use a pip or conda environment):

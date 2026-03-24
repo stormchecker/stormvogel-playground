@@ -78,7 +78,7 @@ jobs:
       - name: Load or Pull Docker Image
         run: |
             echo "Downloading stormvogel image..."
-            docker pull stormvogel/stormvogel
+            docker pull stormvogel/stormvogel:nightly
       
       - name: Generate secret key
         run: |

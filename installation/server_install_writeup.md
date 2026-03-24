@@ -77,10 +77,10 @@ sudo /home/serverhost0/Stormvogel-2025/system_deps.sh serverhost0
 * Adds `serverhost0` to the docker group
 * Installs python3, pip3, (not installed: nodejs, npm)
 
-* Now you can also pull the docker [stormvogel/stormvogel](https://hub.docker.com/r/stormvogel/stormvogel) image
+* Now you can also pull the docker [stormvogel/stormvogel:nightly](https://hub.docker.com/r/stormvogel/stormvogel:nightly) image
 ```bash
-docker image rm stormvogel/stormvogel
-docker pull stormvogel/stormvogel
+docker image rm stormvogel/stormvogel:nightly
+docker pull stormvogel/stormvogel:nightly
 ```
 
 * If the image is updated you can reuse the command and clean up exited containers (don't reuse old containers)

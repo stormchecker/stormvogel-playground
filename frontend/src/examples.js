@@ -25,6 +25,44 @@ export const examples = await Promise.all([
         "prism_example.py": 'prism/prism_example.py',
         "prism_example.prism": 'prism/prism_example.prism'
     }),
+    loadExample('tutorial', 'Orchard Modeling', {
+        "orchard_modeling.py": 'orchard/orchard_modeling.py'
+    }),
+    loadExample('tutorial', 'Orchard Model Checking', {
+        "orchard_model_checking.py": 'orchard/orchard_model_checking.py'
+    }),
+    loadExample('tutorial', 'Orchard Reward Queries', {
+        "orchard_rewards.py": 'orchard/orchard_rewards.py'
+    }),
+    loadExample('tutorial', 'Orchard Bisimulation', {
+        "orchard_bisimulation.py": 'orchard/orchard_bisimulation.py'
+    }),
+    loadExample('tutorial', 'Orchard Interval MDP', {
+        "orchard_interval_mdp.py": 'orchard/orchard_interval_mdp.py'
+    }),
+    loadExample('tutorial', 'Orchard Algorithm Comparison', {
+        "orchard_algorithms.py": 'orchard/orchard_algorithms.py'
+    }),
+    loadExample('tutorial', 'Orchard Scheduler', {
+        "orchard_scheduler.py": 'orchard/orchard_scheduler.py',
+        "orchard_stormvogel.pm": 'orchard/orchard_stormvogel.pm'
+    }),
+    loadExample('tutorial', 'Orchard Induced Submodel', {
+        "orchard_induced.py": 'orchard/orchard_induced.py',
+        "orchard_stormvogel.pm": 'orchard/orchard_stormvogel.pm'
+    }),
+    loadExample('tutorial', 'Orchard PAYNT Decision Tree', {
+        "orchard_paynt.py": 'orchard/orchard_paynt.py',
+        "orchard_stormvogel.pm": 'orchard/orchard_stormvogel.pm'
+    }),
+    loadExample('tutorial', 'Orchard POMDP', {
+        "orchard_pomdp.py": 'orchard/orchard_pomdp.py',
+        "orchard_pomdp.pm": 'orchard/orchard_pomdp.pm'
+    }),
+    loadExample('tutorial', 'Orchard POMDP with Stealing', {
+        "orchard_pomdp_steal.py": 'orchard/orchard_pomdp_steal.py',
+        "orchard_pomdp_steal.pm": 'orchard/orchard_pomdp_steal.pm'
+    }),
     // loadExample('stormpy: Getting Started', 'Getting Started Part 1', {
     //     "getting_started_part1.py": 'stormpy/getting_started_part1.py'
     // }),

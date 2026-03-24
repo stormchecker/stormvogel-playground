@@ -69,7 +69,7 @@ def start_sandbox(user_id):
         logger.info(f"Reusing container {container.id} for user {user_id}")
     else:
         container = client.containers.run(
-            "stormvogel/stormvogel",
+            "stormvogel/stormvogel:nightly",
             runtime="runsc",
             detach=True,
             name=container_name,
