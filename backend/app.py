@@ -17,7 +17,7 @@ Creates session and starts sandbox for user
 def create_session():
     data = request.json or {}
     tag = data.get('tag', 'nightly')
-    if tag not in ('latest', 'nightly'):
+    if tag not in ('latest', 'nightly', 'experimental'):
         return jsonify({"status": "error", "message": "Invalid tag"}), 400
 
     if "user_id" not in session:

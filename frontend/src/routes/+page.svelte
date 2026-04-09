@@ -475,6 +475,7 @@ show(model, result)`,
         >
           <option value="latest">latest</option>
           <option value="nightly">nightly</option>
+          <option value="experimental">experimental</option>
         </select>
       </div>
       <div class="dropdown-container">

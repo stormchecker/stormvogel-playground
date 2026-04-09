@@ -38,6 +38,7 @@ project-root/
 ```bash
 docker pull stormvogel/stormvogel:nightly
 docker pull stormvogel/stormvogel:latest
+docker pull stormvogel/stormvogel:experimental
 ```
 
 2. Install backend dependencies (probably want to use a pip or conda environment):
