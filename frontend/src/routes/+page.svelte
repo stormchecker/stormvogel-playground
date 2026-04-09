@@ -58,6 +58,7 @@ show(model, result)`,
   const githubUrl = 'https://github.com/stormchecker/stormvogel';
   const docsUrl = 'https://stormchecker.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
+  let containerTag = "latest"; // Selected container image tag
 
   // Group examples by category
   $: groupedExamples = examples.reduce((acc, example) => {
@@ -296,27 +297,37 @@ show(model, result)`,
     });
   });
 
-  async function startupBackend() {
+  async function startupBackend(tag = containerTag) {
     try {
       const response = await fetch('/api/startup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({}), 
+        body: JSON.stringify({ tag }),
         credentials: 'include'
       });
 
       const result = await response.json();
       if (result.status === 'success') {
-        console.log(result.message); 
+        console.log(result.message);
       } else {
         console.error('Error:', result.message);
       }
     } catch (e) {
       console.error('Failed to startup server backend:', e);
     }
-  }  
+  }
+
+  async function changeContainerTag(newTag) {
+    containerTag = newTag;
+    isExecuting = true;
+    output_html = "";
+    output_non_html = "";
+    error = "";
+    await startupBackend(newTag);
+    isExecuting = false;
+  }
 
   async function saveTabs() {
     try {
@@ -492,6 +503,14 @@ show(model, result)`,
         {/if}
 
       </div>
+      <select
+        class="nav-select"
+        value={containerTag}
+        on:change={(e) => changeContainerTag(e.target.value)}
+      >
+        <option value="latest">latest</option>
+        <option value="nightly">nightly</option>
+      </select>
       <button on:click={() => toggleLinting()}
         class="nav-btn"
         style={lintingEnabled ? '' : 'background: oklch(86.9% 0.022 252.894); color: black;'}>
@@ -823,6 +842,31 @@ show(model, result)`,
     color: oklch(40.7% 0.165 254.624);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-select {
+    background: oklch(55.7% 0.165 254.624);
+    color: #fff;
+    border: none;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 10px 14px;
+    margin: 0 4px;
+    cursor: pointer;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .nav-select:hover {
+    background: oklch(93.2% 0.032 255.585);
+    color: oklch(40.7% 0.165 254.624);
+  }
+
+  .nav-select option {
+    background: #fff;
+    color: #333;
   }
 
   .nav-link {

@@ -15,12 +15,15 @@ Creates session and starts sandbox for user
 '''
 @app.route('/api/startup', methods=['POST'])
 def create_session():
-    data = request.json
+    data = request.json or {}
+    tag = data.get('tag', 'nightly')
+    if tag not in ('latest', 'nightly'):
+        return jsonify({"status": "error", "message": "Invalid tag"}), 400
 
     if "user_id" not in session:
         session["user_id"] = str(uuid.uuid4())
-    if sandbox.start_sandbox(session["user_id"]):
-        print(f"Created new sandbox for user {session['user_id']}")
+    if sandbox.start_sandbox(session["user_id"], tag):
+        print(f"Created new sandbox for user {session['user_id']} with tag {tag}")
         return jsonify({"status": "success", "message": "Succeeded in launching container"}), 200
     return jsonify({"status": "error", "message": "Failed to launch sandbox"}), 400
 

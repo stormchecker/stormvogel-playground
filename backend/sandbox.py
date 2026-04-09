@@ -57,30 +57,38 @@ class ContainerManager:
 
 container_manager = ContainerManager()
 
-# Either reuses and existing container or creates a new one
-def start_sandbox(user_id):
+# Either reuses an existing container or creates a new one
+def start_sandbox(user_id, tag="nightly"):
     container_manager.register_container(user_id)
     container_name = f"sandbox_{user_id}"
+    image = f"stormvogel/stormvogel:{tag}"
     existing_containers = client.containers.list(filters={"name": container_name})
     logger.info(existing_containers)
-    
+
     if existing_containers:
         container = existing_containers[0]
-        logger.info(f"Reusing container {container.id} for user {user_id}")
-    else:
-        container = client.containers.run(
-            "stormvogel/stormvogel:nightly",
-            runtime="runsc",
-            detach=True,
-            name=container_name,
-            stdin_open=True,
-            tty=True,
-            security_opt=["no-new-privileges"],
-            network_mode="none",
-            mem_limit="512m",
-            command="sh",
-        )
-        logger.info(f"Started new sandbox container {container.id} for user {user_id}")
+        # If the existing container uses a different image tag, stop and recreate it
+        if image not in (container.image.tags or []):
+            logger.info(f"Image tag mismatch for user {user_id}, recreating container with {image}")
+            container.stop(timeout=1)
+            container.remove()
+        else:
+            logger.info(f"Reusing container {container.id} for user {user_id}")
+            return container
+
+    container = client.containers.run(
+        image,
+        runtime="runsc",
+        detach=True,
+        name=container_name,
+        stdin_open=True,
+        tty=True,
+        security_opt=["no-new-privileges"],
+        network_mode="none",
+        mem_limit="512m",
+        command="sh",
+    )
+    logger.info(f"Started new sandbox container {container.id} for user {user_id}")
     return container
 
 # Matches HTML code, and separates it from the rest of the string
