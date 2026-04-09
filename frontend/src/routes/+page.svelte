@@ -58,7 +58,7 @@ show(model, result)`,
   const githubUrl = 'https://github.com/stormchecker/stormvogel';
   const docsUrl = 'https://stormchecker.github.io/stormvogel/';
   let lintingEnabled = true; // Toggle for enabling/disabling linting
-  let containerTag = "latest"; // Selected container image tag
+  let containerTag = "nightly"; // Selected container image tag
 
   // Group examples by category
   $: groupedExamples = examples.reduce((acc, example) => {
