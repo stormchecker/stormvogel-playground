@@ -466,11 +466,22 @@ show(model, result)`,
       </a>
     </div>
     <nav>
+      <div class="version-select-wrapper">
+        <span class="version-label">Version:</span>
+        <select
+          class="nav-select"
+          value={containerTag}
+          on:change={(e) => changeContainerTag(e.target.value)}
+        >
+          <option value="latest">latest</option>
+          <option value="nightly">nightly</option>
+        </select>
+      </div>
       <div class="dropdown-container">
         <button class="nav-btn btn-examples"
         on:click={() => dropdownOpen = !dropdownOpen}>
         Examples
-        </button>  
+        </button>
 
         {#if dropdownOpen}
           <div class="dropdown-menu">
@@ -486,7 +497,7 @@ show(model, result)`,
                     ▼
                   </span>
                 </div>
-                
+
                 {#if expandedCategories[category]}
                   <div class="category-examples">
                     {#each categoryExamples as example}
@@ -503,14 +514,6 @@ show(model, result)`,
         {/if}
 
       </div>
-      <select
-        class="nav-select"
-        value={containerTag}
-        on:change={(e) => changeContainerTag(e.target.value)}
-      >
-        <option value="latest">latest</option>
-        <option value="nightly">nightly</option>
-      </select>
       <button on:click={() => toggleLinting()}
         class="nav-btn"
         style={lintingEnabled ? '' : 'background: oklch(86.9% 0.022 252.894); color: black;'}>
@@ -844,19 +847,32 @@ show(model, result)`,
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 
+  .version-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 4px;
+  }
+
+  .version-label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+  }
+
   .nav-select {
     background: oklch(55.7% 0.165 254.624);
     color: #fff;
     border: none;
     font-weight: 500;
     font-size: 1rem;
-    padding: 10px 14px;
-    margin: 0 4px;
+    padding: 10px 32px 10px 14px;
     cursor: pointer;
     border-radius: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    appearance: none;
-    -webkit-appearance: none;
+    appearance: auto;
+    -webkit-appearance: auto;
   }
 
   .nav-select:hover {
@@ -873,7 +889,6 @@ show(model, result)`,
     padding: 0 1em;
     text-decoration: none;
     color: #000000;
-    border-right: 1px solid #c9c9c9;
   }
 
   .example-btn {
