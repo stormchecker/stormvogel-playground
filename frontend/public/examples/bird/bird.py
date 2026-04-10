@@ -1,5 +1,4 @@
 from stormvogel import *
-from playground import show
 
 def available_actions(s):
     if s == "init": # Either study or not

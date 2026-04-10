@@ -1,6 +1,5 @@
 import stormpy
 from stormvogel import *
-from playground import show
 from enum import Enum
 from copy import deepcopy
 

@@ -27,7 +27,6 @@
 # Here is a small snippet to get you started:
 from stormvogel import *
 from stormvogel.bird import *
-from playground import show
 
 # This function describes the transition relation
 def delta(state):

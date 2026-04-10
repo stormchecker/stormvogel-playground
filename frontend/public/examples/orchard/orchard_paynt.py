@@ -61,7 +61,6 @@ if result.success:
     import io
     import matplotlib.pyplot as plt
     import matplotlib.image as mpimg
-    from playground import show
 
     # Render decision tree via graphviz, embed in a matplotlib figure, display via playground
     png_bytes = result.tree.to_graphviz().pipe(format='png')
