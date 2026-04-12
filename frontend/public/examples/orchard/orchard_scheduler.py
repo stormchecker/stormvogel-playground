@@ -29,4 +29,5 @@ for state in orchard_prism.states:
         print(f"  {state.valuations}  =>  {action_name}")
         i += 1
         if i >= 20:
+            print("   ...(truncated)...")
             break
