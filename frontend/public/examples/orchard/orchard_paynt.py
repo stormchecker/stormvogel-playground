@@ -1,5 +1,6 @@
 import stormpy
 import paynt
+from stormvogel import show
 
 # Load and build the full Prism Orchard model with state valuations
 prism_program = stormpy.parse_prism_program("orchard_stormvogel.pm")
