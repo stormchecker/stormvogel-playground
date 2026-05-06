@@ -6,7 +6,7 @@
   import { python } from "@codemirror/lang-python";     // Imports Python syntax highlighting
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
-  import { parseLintErrors } from '../utils';
+  import { parseLintErrors, extractGistId } from '../utils';
   import JSZip from "jszip"; // Import JSZip for creating zip files
   import { examples } from  '../examples.js';
   import LZString from 'lz-string';
@@ -110,6 +110,26 @@ show(model, result)`,
     }).catch(() => {
       alert("Share link:\n" + url);
     });
+  }
+
+  async function shareViaGist() {
+    const input = window.prompt(
+      "Paste a public GitHub gist URL (the gist must contain your code):"
+    );
+    if (!input) return;
+    const id = extractGistId(input);
+    if (!id) {
+      alert("Couldn't recognise that as a gist URL.");
+      return;
+    }
+    const url = `${window.location.origin}${window.location.pathname}?gist=${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      shareToast = true;
+      setTimeout(() => { shareToast = false; }, 3000);
+    } catch {
+      alert("Share link:\n" + url);
+    }
   }
 
   function exportCode() {
@@ -248,7 +268,28 @@ show(model, result)`,
     }
   }
 
-  onMount(() => {
+  async function loadGistIntoTabs(gistId) {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`);
+    if (!res.ok) throw new Error(`gist fetch failed: ${res.status}`);
+    const gist = await res.json();
+    const files = gist.files || {};
+    const filenames = Object.keys(files);
+    if (filenames.length === 0) throw new Error("gist has no files");
+
+    const loaded = {};
+    for (const name of filenames) {
+      const f = files[name];
+      // Files >~1MB are truncated inline and must be re-fetched from raw_url
+      loaded[name] = f.truncated && f.raw_url
+        ? await (await fetch(f.raw_url)).text()
+        : (f.content ?? "");
+    }
+    tabs = loaded;
+    activeTab = filenames[0];
+    code = tabs[activeTab];
+  }
+
+  onMount(async () => {
       // Load linting preference from localStorage
     const lintPref = localStorage.getItem('linting_enabled');
     if (lintPref !== null) {
@@ -263,8 +304,16 @@ show(model, result)`,
 
     // Check for shared workspace in URL params
     const params = new URLSearchParams(window.location.search);
+    const gistId = params.get('gist');
     const sharedActive = params.get('active');
-    if (sharedActive) {
+    if (gistId) {
+      try {
+        await loadGistIntoTabs(gistId);
+      } catch (e) {
+        console.error('Failed to load gist:', e);
+        getTabData();
+      }
+    } else if (sharedActive) {
       try {
         const sharedTabs = {};
         let i = 0;
@@ -531,6 +580,10 @@ show(model, result)`,
       <button on:click={shareCode}
         class="nav-btn">
         Share
+      </button>
+      <button on:click={shareViaGist}
+        class="nav-btn">
+        Share via gist
       </button>
     </nav>
   </header>
