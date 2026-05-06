@@ -13,6 +13,16 @@ export   function mapSeverity(errorCode) {
   }
 }
 
+// Extracts a GitHub gist ID from a pasted URL, a scheme-less URL, or a bare ID.
+// Returns null if no plausible hex ID is found.
+export function extractGistId(input) {
+  if (!input) return null;
+  const trimmed = String(input).trim().split(/[?#]/)[0].replace(/\/+$/, '');
+  if (!trimmed) return null;
+  const candidate = trimmed.split('/').pop();
+  return /^[0-9a-f]{20,}$/i.test(candidate) ? candidate : null;
+}
+
 // Parses the lint output and extracts the line number, column number, error code, and message
 export function parseLintErrors(lintOutput, doc) {
   const errors = [];

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import Page from '../src/routes/+page.svelte';
-import { mapSeverity, parseLintErrors } from '../src/utils.js'; // Import functions
+import { mapSeverity, parseLintErrors, extractGistId } from '../src/utils.js'; // Import functions
 import { vi } from 'vitest';
 
 
@@ -170,6 +170,19 @@ describe('Page Component', () => {
     expect(mapSeverity('W001')).toBe('warning');
     expect(mapSeverity('I001')).toBe('info');
     expect(mapSeverity('unknown')).toBe('info');
+  });
+
+  test('extractGistId function', () => {
+    const id = 'aa11bb22cc33dd44ee55ff6677889900';
+    expect(extractGistId(`https://gist.github.com/someuser/${id}`)).toBe(id);
+    expect(extractGistId(`https://gist.github.com/${id}`)).toBe(id);
+    expect(extractGistId(`gist.github.com/someuser/${id}/`)).toBe(id);
+    expect(extractGistId(`https://gist.github.com/someuser/${id}#file-foo-py`)).toBe(id);
+    expect(extractGistId(`https://gist.github.com/someuser/${id}?foo=bar`)).toBe(id);
+    expect(extractGistId(id)).toBe(id);
+    expect(extractGistId('https://example.com/foo')).toBeNull();
+    expect(extractGistId('')).toBeNull();
+    expect(extractGistId(null)).toBeNull();
   });
 
   test('parseLintErrors function', () => {
