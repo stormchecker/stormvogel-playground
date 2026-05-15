@@ -264,7 +264,28 @@ show(model, result)`,
     // Check for shared workspace in URL params
     const params = new URLSearchParams(window.location.search);
     const sharedActive = params.get('active');
-    if (sharedActive) {
+    const gistId = params.get('gist');
+
+    if (gistId) {
+      fetch(`https://api.github.com/gists/${gistId}`).then(response => response.json()).then(data => {
+      const gistTabs = {};
+      for(const[filename, fileObj] of Object.entries(data.files)){
+        gistTabs[filename] = fileObj.content;
+      }
+      tabs = gistTabs;
+      activeTab = sharedActive && tabs[sharedActive] ? sharedActive : Object.keys(tabs)[0];
+      code = tabs[activeTab];
+
+      if (editor) {
+        editor.dispatch({
+          changes: { from: 0, to: editor.state.doc.length, insert: code }
+        });
+      }
+      }).catch(error => {
+        console.error('Gist could not be pulled: ', error);
+        getTabData();
+      })
+      }else if(sharedActive){
       try {
         const sharedTabs = {};
         let i = 0;
