@@ -69,7 +69,9 @@ describe('Page Component', () => {
     const editorElement = document.querySelector('.code-editor');
     // Ensure the editor contains the expected text
     expect(editorElement.textContent).toContain('print("model file")');
-    expect(screen.getByRole('button', { name: '▶ Run' })).toBeEnabled();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '▶ Run' })).toBeEnabled();
+    });
 
     // Check if the prism file is also loaded, but cannot be executed directly
     fireEvent.click(screen.getByText('Model.prism'));
@@ -77,7 +79,7 @@ describe('Page Component', () => {
     expect(screen.getByRole('button', { name: '▶ Run' })).toBeDisabled();
   });
 
-  test('saves non-empty code to local storage', async () => {
+  test('automatically saves non-empty code to local storage', async () => {
     render(Page);
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
     fireEvent.input(codeEditor, { target: { textContent: '' } });
@@ -85,27 +87,21 @@ describe('Page Component', () => {
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => '' } });
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
 
-    const saveButton = screen.getByText('Save');
-    fireEvent.click(saveButton);
-
-    // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('tabs_data');
-    expect(savedCode).toBe('{"welcome.py":"print(\\"Hello, World!\\")"}'); // Assuming the initial code is an empty string
+    await waitFor(() => {
+      expect(localStorage.getItem('tabs_data')).toBe('{"welcome.py":"print(\\"Hello, World!\\")"}');
+    });
   });
 
-  test('saves empty code to local storage', async () => {
+  test('automatically saves empty code to local storage', async () => {
     render(Page);
     const codeEditor = document.querySelector('.code-editor .cm-content[role="textbox"]');
     fireEvent.input(codeEditor, { target: { textContent: '' } });
     // Delete all of the existing content
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => '' } });
 
-    const saveButton = screen.getByText('Save');
-    fireEvent.click(saveButton);
-
-    // Check if the code was saved to local storage
-    const savedCode = localStorage.getItem('tabs_data');
-    expect(savedCode).toBe('{"welcome.py":""}');
+    await waitFor(() => {
+      expect(localStorage.getItem('tabs_data')).toBe('{"welcome.py":""}');
+    });
   });
 
   test('executes code and displays output', async () => {
@@ -130,8 +126,9 @@ describe('Page Component', () => {
     fireEvent.input(codeEditor, { target: { textContent: '' } });
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
 
-    // Click the execute button
+    // Click the execute button once the backend is ready
     const executeButton = screen.getByText('▶ Run');
+    await waitFor(() => expect(executeButton.closest('button')).toBeEnabled());
     fireEvent.click(executeButton);
 
     // Wait for the output to appear
@@ -161,8 +158,10 @@ describe('Page Component', () => {
     // Trigger linting by pasting code
     fireEvent.paste(codeEditor, { clipboardData: { getData: () => 'print("Hello, World!")' } });
     
-    const lintErrorsElement = await screen.findByText('Example error message (line 1, col 1)');
-    expect(lintErrorsElement).toBeInTheDocument();
+    await waitFor(() => {
+      expect(document.querySelector('.cm-lint-marker-error')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Example error message (line 1, col 1)')).not.toBeInTheDocument();
   });
   
   test('mapSeverity function', () => {

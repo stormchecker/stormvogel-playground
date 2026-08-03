@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:remote-backend": "VITE_BACKEND_URL=https://try.stormchecker.org vite",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",

@@ -7,21 +7,30 @@
   import { linter, lintGutter } from "@codemirror/lint"; // Imports linting support
   import { fade } from 'svelte/transition'; // Imports smooth transition for a pop-up message
   import { parseLintErrors } from '../utils';
-  import JSZip from "jszip"; // Import JSZip for creating zip files
   import { examples } from  '../examples.js';
   import LZString from 'lz-string';
 
   let code = "";
   let output_html = "";
+  $: sandboxHtml = makeResponsiveOutput(output_html);
   let output_non_html = "";
   let error = "";
   let editor;
   let lintErrors = [];
   let isExecuting = false;
-  let saveStatus = 'idle'; // Variable for checking the save status
-  let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully
-  let shareToast = false; // Show a pop-up ('toast') when the share link is copied
+  let isStopping = false;
+  let backendStatus = 'starting';
+  let toastMessage = '';
+  let toastKind = 'info';
+  let toastTimer;
+  let renameDialogOpen = false;
+  let renameValue = '';
   let activeTab = "welcome.py"; // Track the active tab
+  let mobileView = 'editor';
+  let editorWidth = 50;
+  let previewHeight = 66;
+  let resizeCleanup;
+  let saveTimer;
   $: isExecutableFile = activeTab.toLowerCase().endsWith('.py');
   let tabs = {
     "welcome.py": `# Welcome to the Stormvogel playground!
@@ -54,11 +63,39 @@ result = model_checking(model, "R=? [F \\\"goal\\\"]")
 show(model, result)`,
   };
   let dropdownOpen = false; // Examples dropdown menu
+  let shareMenuOpen = false;
   let expandedCategories = {}; // Track which categories are expanded
   const githubUrl = 'https://github.com/stormchecker/stormvogel';
   const docsUrl = 'https://stormchecker.github.io/stormvogel/';
-  let lintingEnabled = true; // Toggle for enabling/disabling linting
   let containerTag = "nightly"; // Selected container image tag
+
+  function makeResponsiveOutput(html) {
+    if (!html) {
+      return '';
+    }
+
+    const resizeSupport = `
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+        body > div { width: 100% !important; height: 100% !important; min-height: 0 !important; box-sizing: border-box; }
+        canvas, svg { width: 100% !important; height: 100% !important; object-fit: contain; }
+      </style>
+      <script>
+        (() => {
+          let frame;
+          const notifyResize = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+          };
+          new ResizeObserver(notifyResize).observe(document.documentElement);
+          window.addEventListener('load', notifyResize);
+        })();
+      </` + `script>`;
+
+    return /<\/body>/i.test(html)
+      ? html.replace(/<\/body>/i, `${resizeSupport}</body>`)
+      : `${html}${resizeSupport}`;
+  }
 
   // Group examples by category
   $: groupedExamples = examples.reduce((acc, example) => {
@@ -75,28 +112,37 @@ show(model, result)`,
     expandedCategories = { ...expandedCategories }; // Trigger reactivity
   }
 
-  // Save all tabs to local storage
+  // Persist the workspace automatically after edits.
   function saveCode() {
     try {
-      // Update the active tab's content in the tabs object
-      tabs[activeTab] = editor.state.doc.toString();
-      const tabsData = JSON.stringify(tabs); // Convert the tabs object to JSON
-      localStorage.setItem("tabs_data", tabsData); // Save the JSON string to local storage
-      saveStatus = 'saved';
-      saveToast = true;
-      setTimeout(() => { // After 2 seconds set saveStatus back to default
-        saveStatus = 'idle';
-      }, 2000);
-      setTimeout(() => { // After 3 seconds set saveToast to false so it fades away
-        saveToast = false;
-      }, 3000);
-    } catch (error) { // If there are errors while saving, output it to the console
+      if (editor && activeTab) {
+        tabs[activeTab] = editor.state.doc.toString();
+      }
+      localStorage.setItem("tabs_data", JSON.stringify(tabs));
+    } catch (error) {
       console.error("Failed to save tabs: ", error);
-      alert("Error, unable to save tabs.");
     }
   }
 
-  function shareCode() {
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveCode, 400);
+  }
+
+  function handleBeforeUnload() {
+    saveCode();
+    stopExecution();
+  }
+
+  function showToast(message, kind = 'info') {
+    clearTimeout(toastTimer);
+    toastMessage = message;
+    toastKind = kind;
+    toastTimer = setTimeout(() => { toastMessage = ''; }, 3000);
+  }
+
+  async function shareCode() {
+    shareMenuOpen = false;
     tabs[activeTab] = editor.state.doc.toString();
     const params = new URLSearchParams();
     params.set('active', activeTab);
@@ -105,16 +151,26 @@ show(model, result)`,
       params.set(`code${i}`, LZString.compressToEncodedURIComponent(content));
     });
     const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(url).then(() => {
-      shareToast = true;
-      setTimeout(() => { shareToast = false; }, 3000);
-    }).catch(() => {
-      alert("Share link:\n" + url);
-    });
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('Share link copied to clipboard');
+    } catch (error) {
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand('copy');
+      textarea.remove();
+      showToast(copied ? 'Share link copied to clipboard' : 'Could not copy the share link', copied ? 'info' : 'error');
+    }
   }
 
-  function exportCode() {
+  async function exportCode() {
+    shareMenuOpen = false;
     tabs[activeTab] = editor.state.doc.toString(); // Update the active tab's content in the tabs object
+    const { default: JSZip } = await import('jszip');
     const zip = new JSZip(); // Create a new zip instance
     const now = new Date();
     // Format date as dd-mm-yyyy
@@ -143,7 +199,19 @@ show(model, result)`,
     editor = new EditorView({
       doc: code,
       // Sets up the editor with Python syntax highlighting, tab handling and linting
-      extensions: [basicSetup, keymap.of([indentWithTab]), python(), lintGutter(),linter(lintCode)],
+      extensions: [
+        basicSetup,
+        keymap.of([indentWithTab]),
+        python(),
+        lintGutter(),
+        linter(lintCode),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            tabs[activeTab] = update.state.doc.toString();
+            scheduleSave();
+          }
+        })
+      ],
       parent: document.querySelector(".code-editor"),
     });
   }
@@ -166,6 +234,7 @@ show(model, result)`,
     if (example && example.files) {
       // Merge example tabs into current tabs (overwrite if name exists)
       tabs = { ...tabs, ...example.files };
+      scheduleSave();
       // Set the first file of the example as the active tab
       activeTab = Object.keys(example.files)[0];
       code = tabs[activeTab];
@@ -185,6 +254,7 @@ show(model, result)`,
       const updatedTabs = { ...tabs }; // Create a copy of the tabs object
       delete updatedTabs[tabName]; // Remove the tab
       tabs = updatedTabs; // Update the tabs object
+      scheduleSave();
   
     if (activeTab === tabName) {
       activeTab = Object.keys(tabs)[0]; // Switch to the first available tab
@@ -194,7 +264,7 @@ show(model, result)`,
       });
     }
     } else {
-      alert("At least one tab must remain open.");
+      showToast("At least one tab must remain open", 'error');
     }
   }
 
@@ -204,7 +274,8 @@ show(model, result)`,
       newTabIndex++; // Find the next available unique tab name
     }
     const newTabName = `Tab${newTabIndex}.py`;
-    tabs = { ...tabs, [newTabName]: "" }; 
+    tabs = { ...tabs, [newTabName]: "" };
+    scheduleSave();
     activeTab = newTabName; // Set the new tab as active
     code = tabs[activeTab]; // Update the editor content
     editor.dispatch({
@@ -213,15 +284,116 @@ show(model, result)`,
   }
 
   function renameActiveTab() {
-    const newTabName = prompt("Enter new name for the active tab:", activeTab);
-    if (newTabName && newTabName !== activeTab && !tabs[newTabName]) {
-      const updatedTabs = { ...tabs };
-      updatedTabs[newTabName] = updatedTabs[activeTab];
-      delete updatedTabs[activeTab];
-      tabs = updatedTabs;
-      activeTab = newTabName;
-    } else if (tabs[newTabName]) {
-      alert("A tab with this name already exists.");
+    renameValue = activeTab;
+    renameDialogOpen = true;
+  }
+
+  function submitRename() {
+    const newTabName = renameValue.trim();
+    if (!newTabName) {
+      showToast('File name cannot be empty', 'error');
+      return;
+    }
+    if (newTabName === activeTab) {
+      renameDialogOpen = false;
+      return;
+    }
+    if (tabs[newTabName]) {
+      showToast('A tab with this name already exists', 'error');
+      return;
+    }
+
+    const updatedTabs = { ...tabs };
+    updatedTabs[newTabName] = updatedTabs[activeTab];
+    delete updatedTabs[activeTab];
+    tabs = updatedTabs;
+    activeTab = newTabName;
+    renameDialogOpen = false;
+    scheduleSave();
+  }
+
+  function closeMenus(event) {
+    if (!event.target.closest('.dropdown-container')) {
+      dropdownOpen = false;
+    }
+    if (!event.target.closest('.share-container')) {
+      shareMenuOpen = false;
+    }
+  }
+
+  function closeOverlays(event) {
+    if (event.key === 'Escape') {
+      dropdownOpen = false;
+      shareMenuOpen = false;
+      renameDialogOpen = false;
+    }
+  }
+
+  function startResize(event, direction) {
+    if (window.innerWidth <= 900) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const panel = direction === 'columns'
+      ? document.querySelector('.main-content')
+      : document.querySelector('.visualization-panel');
+    const bounds = panel.getBoundingClientRect();
+    const property = direction === 'columns' ? '--editor-width' : '--preview-height';
+    let latestEvent = event;
+    let frame;
+    let value = direction === 'columns' ? editorWidth : previewHeight;
+
+    const updateSize = () => {
+      frame = undefined;
+      const rawValue = direction === 'columns'
+        ? ((latestEvent.clientX - bounds.left) / bounds.width) * 100
+        : ((latestEvent.clientY - bounds.top) / bounds.height) * 100;
+      value = Math.min(75, Math.max(25, rawValue));
+      panel.style.setProperty(property, `${value}%`);
+    };
+
+    const resize = (moveEvent) => {
+      latestEvent = moveEvent;
+      if (!frame) {
+        frame = requestAnimationFrame(updateSize);
+      }
+    };
+
+    const stopResize = () => {
+      if (frame) {
+        cancelAnimationFrame(frame);
+        updateSize();
+      }
+      if (direction === 'columns') {
+        editorWidth = value;
+      } else {
+        previewHeight = value;
+      }
+      document.body.classList.remove('resizing');
+      document.removeEventListener('pointermove', resize);
+      document.removeEventListener('pointerup', stopResize);
+      document.removeEventListener('pointercancel', stopResize);
+      resizeCleanup = undefined;
+    };
+
+    resizeCleanup?.();
+    resizeCleanup = stopResize;
+    document.body.classList.add('resizing');
+    document.addEventListener('pointermove', resize);
+    document.addEventListener('pointerup', stopResize);
+    document.addEventListener('pointercancel', stopResize);
+  }
+
+  function resizeWithKeyboard(event, direction) {
+    const step = event.shiftKey ? 5 : 2;
+    if (direction === 'columns' && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      event.preventDefault();
+      editorWidth = Math.min(75, Math.max(25, editorWidth + (event.key === 'ArrowRight' ? step : -step)));
+    } else if (direction === 'rows' && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
+      event.preventDefault();
+      previewHeight = Math.min(75, Math.max(25, previewHeight + (event.key === 'ArrowDown' ? step : -step)));
     }
   }
 
@@ -250,17 +422,10 @@ show(model, result)`,
   }
 
   onMount(() => {
-      // Load linting preference from localStorage
-    const lintPref = localStorage.getItem('linting_enabled');
-    if (lintPref !== null) {
-      lintingEnabled = lintPref === 'true';
-    }
-
     // Load tabs from local storage
-    window.addEventListener("beforeunload", function () {
-      saveCode();
-      stopExecution();
-    });
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener('click', closeMenus);
+    document.addEventListener('keydown', closeOverlays);
 
     // Check for shared workspace in URL params
     const params = new URLSearchParams(window.location.search);
@@ -312,13 +477,17 @@ show(model, result)`,
   });
 
   onDestroy(() => {
-    window.removeEventListener("beforeunload", function () {
-      saveCode();
-      stopExecution();
-    });
+    resizeCleanup?.();
+    clearTimeout(saveTimer);
+    clearTimeout(toastTimer);
+    saveCode();
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    document.removeEventListener('click', closeMenus);
+    document.removeEventListener('keydown', closeOverlays);
   });
 
   async function startupBackend(tag = containerTag) {
+    backendStatus = 'starting';
     try {
       const response = await fetch('/api/startup', {
         method: 'POST',
@@ -331,23 +500,24 @@ show(model, result)`,
 
       const result = await response.json();
       if (result.status === 'success') {
+        backendStatus = 'ready';
         console.log(result.message);
       } else {
+        backendStatus = 'error';
         console.error('Error:', result.message);
       }
     } catch (e) {
+      backendStatus = 'error';
       console.error('Failed to startup server backend:', e);
     }
   }
 
   async function changeContainerTag(newTag) {
     containerTag = newTag;
-    isExecuting = true;
     output_html = "";
     output_non_html = "";
     error = "";
     await startupBackend(newTag);
-    isExecuting = false;
   }
 
   async function saveTabs() {
@@ -364,7 +534,7 @@ show(model, result)`,
       const result = await response.json();
       if (result.status !== 'success') {
         console.error('Error saving tabs:', result.message);
-        alert('Error saving tabs: ' + result.message);
+        showToast('Could not prepare the workspace for execution', 'error');
         return false;
       }
 
@@ -372,6 +542,7 @@ show(model, result)`,
       return true;
     } catch (e) {
       console.error('Failed to save tabs to container:', e);
+      showToast('Could not connect to the execution backend', 'error');
       return false;
     }
   }
@@ -379,7 +550,7 @@ show(model, result)`,
   async function executeCode() {
     // Only Python tabs can be executed. Other files are available to Python
     // scripts in the workspace, but are not executable themselves.
-    if (!isExecutableFile || isExecuting) {
+    if (!isExecutableFile || isExecuting || backendStatus !== 'ready') {
       return;
     }
 
@@ -409,20 +580,27 @@ show(model, result)`,
         output_html = result.output_html;
         output_non_html = result.output_non_html;
         error = "";
+        mobileView = output_html ? 'preview' : 'console';
       } else {
         error = result.message || "An unknown error occurred";
+        mobileView = 'console';
       }
         
     } catch (e) {
       output_html = "";
       output_non_html = "";
       error = "Failed to connect to execution server";
+      mobileView = 'console';
     } finally {
       isExecuting = false;
     }
   }
 
   async function stopExecution() {
+    const showStatus = isExecuting;
+    if (showStatus) {
+      isStopping = true;
+    }
     try {
       const response = await fetch('/api/stop', {
         method: 'POST',
@@ -433,21 +611,30 @@ show(model, result)`,
       });
 
       const result = await response.json();
-      return result.message; // Assuming the server returns a message
+      if (showStatus) {
+        output_non_html = result.message || 'Execution stopped.';
+        error = '';
+        mobileView = 'console';
+      }
+      return result.message;
     } catch (e) {
+      if (showStatus) {
+        error = "Failed to stop execution";
+        mobileView = 'console';
+      }
       return "Failed to connect to execution server";
+    } finally {
+      if (showStatus) {
+        isExecuting = false;
+        isStopping = false;
+      }
     }
-  }
-
-  function toggleLinting() {
-    lintingEnabled = !lintingEnabled;
-    localStorage.setItem('linting_enabled', lintingEnabled.toString()); // Save the preference to localStorage
   }
 
   async function lintCode(view) {
     const code = view.state.doc.toString();
-    // Only lint if not executing, the active tab is a Python file, and linting is enabled
-    if (isExecuting || !activeTab.endsWith('.py') || !lintingEnabled) {
+    // Only lint Python files while execution is idle.
+    if (isExecuting || !activeTab.endsWith('.py')) {
       lintErrors = [];
       return lintErrors;
     }
@@ -498,6 +685,7 @@ show(model, result)`,
         <select
           class="nav-select"
           value={containerTag}
+          disabled={backendStatus === 'starting'}
           on:change={(e) => changeContainerTag(e.target.value)}
         >
           <option value="latest">latest</option>
@@ -507,7 +695,8 @@ show(model, result)`,
       </div>
       <div class="dropdown-container">
         <button class="nav-btn btn-examples"
-        on:click={() => dropdownOpen = !dropdownOpen}>
+        aria-expanded={dropdownOpen}
+        on:click={() => { dropdownOpen = !dropdownOpen; shareMenuOpen = false; }}>
         Examples
         </button>
 
@@ -542,28 +731,37 @@ show(model, result)`,
         {/if}
 
       </div>
-      <button on:click={() => toggleLinting()}
-        class="nav-btn"
-        style={lintingEnabled ? '' : 'background: oklch(86.9% 0.022 252.894); color: black;'}>
-        {lintingEnabled ? 'Linting: On' : 'Linting: Off'}
-      </button>
-      <button on:click={saveCode}
-        style={saveStatus === 'saved' ? "background: green; color: white;" : ""}
-        class="nav-btn">
-        {saveStatus === 'saved' ? 'Saved' : 'Save'}
-      </button>
-      <button on:click={exportCode}
-        class="nav-btn">
-        Export
-      </button>
-      <button on:click={shareCode}
-        class="nav-btn">
-        Share
-      </button>
+      <div class="share-container">
+        <button
+          class="nav-btn"
+          aria-expanded={shareMenuOpen}
+          on:click={() => { shareMenuOpen = !shareMenuOpen; dropdownOpen = false; }}
+        >
+          Share
+        </button>
+        {#if shareMenuOpen}
+          <div class="share-menu">
+            <button on:click={shareCode}>Copy share link</button>
+            <button on:click={exportCode}>Download ZIP</button>
+          </div>
+        {/if}
+      </div>
     </nav>
   </header>
 
-  <div class="main-content">
+  <div class="mobile-view-switcher" role="tablist" aria-label="Workspace view">
+    <button class:active={mobileView === 'editor'} on:click={() => mobileView = 'editor'} role="tab" aria-selected={mobileView === 'editor'}>Editor</button>
+    <button class:active={mobileView === 'preview'} on:click={() => mobileView = 'preview'} role="tab" aria-selected={mobileView === 'preview'}>Preview</button>
+    <button class:active={mobileView === 'console'} on:click={() => mobileView = 'console'} role="tab" aria-selected={mobileView === 'console'}>Console</button>
+  </div>
+
+  <div
+    class="main-content"
+    class:show-editor={mobileView === 'editor'}
+    class:show-preview={mobileView === 'preview'}
+    class:show-console={mobileView === 'console'}
+    style={`--editor-width: ${editorWidth}%;`}
+  >
     <div class="code-panel">
       <div class="editor-header">
         <div class="tab-container">
@@ -573,21 +771,16 @@ show(model, result)`,
                   role="button"
                   tabindex="0"
                   data-tab-name={tabName}
-                  on:click={() => {
-                    if (activeTab === tabName) {
-                      renameActiveTab();
-                    } else {
-                      switchTab(tabName);
-                    }
-                  }}
+                  title={activeTab === tabName ? 'Double-click to rename' : `Open ${tabName}`}
+                  on:click={() => switchTab(tabName)}
+                  on:dblclick={() => activeTab === tabName && renameActiveTab()}
                   on:keydown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      if (activeTab === tabName) {
-                        renameActiveTab();
-                      } else {
-                        switchTab(tabName);
-                      }
+                      switchTab(tabName);
+                    } else if (e.key === "F2" && activeTab === tabName) {
+                      e.preventDefault();
+                      renameActiveTab();
                     }
                   }}
               >
@@ -622,15 +815,17 @@ show(model, result)`,
           >
       </div>
         <button
-          on:click={executeCode}
+          on:click={isExecuting ? stopExecution : executeCode}
           class="nav-btn"
-          disabled={!isExecutableFile || isExecuting}
-          title={isExecutableFile ? 'Run the active Python file' : 'Only Python files can be run'}
-          style={isExecuting ? "background: oklch(93.2% 0.032 255.585);" : ""}
+          class:stop-btn={isExecuting}
+          disabled={isStopping || (!isExecuting && (!isExecutableFile || backendStatus !== 'ready'))}
+          title={isExecuting ? 'Stop execution' : backendStatus === 'error' ? 'Backend unavailable' : backendStatus !== 'ready' ? 'Waiting for backend' : isExecutableFile ? 'Run the active Python file' : 'Only Python files can be run'}
         >
           <span class="button-content">
-            {#if isExecuting}
-              <img src="/progress.svg" alt="Executing..." class="progress-icon" />
+            {#if isStopping}
+              <img src="/progress.svg" alt="Stopping..." class="progress-icon" />
+            {:else if isExecuting}
+              <span>■ Stop</span>
             {:else}
               <span>▶ Run</span>
             {/if}
@@ -642,53 +837,122 @@ show(model, result)`,
       ></div>
     </div>
 
-    <div class="visualization-panel">
+    <div
+      class="resizer vertical-resizer"
+      role="slider"
+      aria-label="Editor width"
+      aria-orientation="horizontal"
+      aria-valuemin="25"
+      aria-valuemax="75"
+      aria-valuenow={Math.round(editorWidth)}
+      tabindex="0"
+      on:pointerdown={(event) => startResize(event, 'columns')}
+      on:keydown={(event) => resizeWithKeyboard(event, 'columns')}
+    ></div>
+
+    <div class="visualization-panel" style={`--preview-height: ${previewHeight}%;`}>
       <div class="model-preview">
-        <iframe id="sandboxFrame" title="sandboxed_iframe" sandbox="allow-scripts" style="width:100%; height:100%; border:none;"
-                srcdoc={output_html}>
+        {#if !output_html}
+          <div class="empty-state" title="Run code that produces a visualization">No preview output yet</div>
+        {/if}
+        <iframe id="sandboxFrame" title="Model visualization output" sandbox="allow-scripts" style="width:100%; height:100%; border:none;"
+                srcdoc={sandboxHtml}>
         </iframe>
       </div>
+      <div
+        class="resizer horizontal-resizer"
+        role="slider"
+        aria-label="Preview height"
+        aria-orientation="vertical"
+        aria-valuemin="25"
+        aria-valuemax="75"
+        aria-valuenow={Math.round(previewHeight)}
+        tabindex="0"
+        on:pointerdown={(event) => startResize(event, 'rows')}
+        on:keydown={(event) => resizeWithKeyboard(event, 'rows')}
+      ></div>
       <div class="output-console">
+        {#if !output_non_html && !error}
+          <div class="empty-state" title="Standard output and execution errors appear here">No console output yet</div>
+        {/if}
         <pre id="output-non-html">{output_non_html}</pre>
         <pre id="error" style="color: red;">{error}</pre>
-        <pre id="lint-errors" style="color: orange;">{lintErrors.map(e => `${e.message} (line ${editor.state.doc.lineAt(e.from).number}, col ${e.from - editor.state.doc.lineAt(e.from).from + 1})`).join('\n')}</pre>
       </div>
     </div>
   </div>
-  {#if saveToast}
-    <div class="save-toast" transition:fade>
-      The code has been saved successfully
+  {#if renameDialogOpen}
+    <div
+      class="modal-backdrop"
+      role="presentation"
+      on:click={(event) => event.target === event.currentTarget && (renameDialogOpen = false)}
+    >
+      <div class="rename-dialog" role="dialog" aria-modal="true" aria-labelledby="rename-title">
+        <form on:submit={(event) => { event.preventDefault(); submitRename(); }}>
+          <h2 id="rename-title">Rename file</h2>
+          <label for="rename-input">File name</label>
+          <input id="rename-input" bind:value={renameValue} spellcheck="false" />
+          <div class="dialog-actions">
+            <button type="button" on:click={() => renameDialogOpen = false}>Cancel</button>
+            <button type="submit" class="primary">Rename</button>
+          </div>
+        </form>
+      </div>
     </div>
   {/if}
-  {#if shareToast}
-    <div class="save-toast" transition:fade>
-      Share link copied to clipboard
+
+  {#if toastMessage}
+    <div class="save-toast" class:error-toast={toastKind === 'error'} role="status" aria-live="polite" transition:fade>
+      {toastMessage}
     </div>
   {/if}
 
 </div>
 
 <style>
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  :global(html) {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   :global(body) {
     margin: 0;
     padding: 0;
     background-color: #ffffff;
     color: #333333;
     font-family: 'Arial', sans-serif;
-    height: 100vh;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  :global(#app) {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
   }
 
   .container {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 100vw;
     height: 100vh;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
   }
 
   header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    min-width: 0;
     padding: 1rem 2rem;
     background-color: #f7f7f7;
     border-bottom: 1px solid #ddd;
@@ -701,14 +965,17 @@ show(model, result)`,
 
   nav {
     display: flex;
+    align-items: center;
+    min-width: 0;
   }
 
   .button-content {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 50px; /* Set a fixed width to ensure consistent size */
-    height: 15px; /* Set a fixed height to ensure consistent size */
+    min-width: 50px;
+    height: 15px;
+    white-space: nowrap;
   }
 
   .progress-icon {
@@ -718,15 +985,17 @@ show(model, result)`,
 
   .main-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, calc(var(--editor-width) - 6px)) 12px minmax(0, 1fr);
     flex-grow: 1;
-    gap: 1rem;
+    gap: 0;
     padding: 1rem;
     background-color: #fafafa;
     overflow: hidden;
   }
 
   .code-panel {
+    min-width: 0;
+    min-height: 0;
     background: #f5f5f5;
     border-radius: 4px;
     overflow: hidden;
@@ -738,6 +1007,7 @@ show(model, result)`,
   .editor-header {
     display: flex;
     justify-content: space-between;
+    min-width: 0;
     align-items: center;
     background: oklch(88.2% 0.059 254.128);
     padding: 4px 16px;
@@ -746,6 +1016,8 @@ show(model, result)`,
 
   .code-editor {
     flex-grow: 1;
+    min-width: 0;
+    min-height: 0;
     overflow: auto;
     background-color: #fff;
     color: #333;
@@ -760,12 +1032,68 @@ show(model, result)`,
   .visualization-panel {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    min-width: 0;
+    min-height: 0;
+    gap: 0;
     overflow: hidden;
   }
 
+  .resizer {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    touch-action: none;
+  }
+
+  .resizer::after {
+    position: absolute;
+    content: '';
+    border-radius: 2px;
+    background: #cbd5e1;
+    transition: background 0.15s;
+  }
+
+  .resizer:hover::after,
+  .resizer:focus-visible::after {
+    background: oklch(55.7% 0.165 254.624);
+  }
+
+  .vertical-resizer {
+    cursor: col-resize;
+  }
+
+  .vertical-resizer::after {
+    top: 0;
+    bottom: 0;
+    left: 5px;
+    width: 2px;
+  }
+
+  .horizontal-resizer {
+    cursor: row-resize;
+  }
+
+  .horizontal-resizer::after {
+    top: 5px;
+    right: 0;
+    left: 0;
+    height: 2px;
+  }
+
+  :global(body.resizing) {
+    user-select: none;
+  }
+
+  :global(body.resizing iframe) {
+    pointer-events: none;
+  }
+
   .model-preview {
-    flex: 2;
+    position: relative;
+    flex: 0 0 calc(var(--preview-height) - 6px);
     background: #f5f5f5;
     border-radius: 4px;
     padding: 1rem;
@@ -774,7 +1102,8 @@ show(model, result)`,
   }
 
   .output-console {
-    flex: 1;
+    position: relative;
+    flex: 1 1 0;
     background: #fff;
     padding: 1rem;
     border-radius: 4px;
@@ -783,19 +1112,95 @@ show(model, result)`,
     font-family: 'Courier New', monospace;
   }
 
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    color: #777;
+    font-family: 'Arial', sans-serif;
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
   .save-toast {
     position: fixed;
     bottom: 70px;
     left: 50%;
+    z-index: 40;
     transform: translateX(-50%);
-    background: #24add6;
+    background: #246b9e;
     color: #fff;
     padding: 10px 20px;
     border-radius: 5px;
-    opacity: 0.9;
+    opacity: 0.95;
+  }
+
+  .error-toast {
+    background: #b42318;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .rename-dialog {
+    width: min(100%, 380px);
+    padding: 1.25rem;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  }
+
+  .rename-dialog h2 {
+    margin: 0 0 1rem;
+    font-size: 1.15rem;
+  }
+
+  .rename-dialog label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .rename-dialog input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    font: inherit;
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .dialog-actions button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .dialog-actions .primary {
+    background: oklch(55.7% 0.165 254.624);
+    color: #fff;
   }
 
   .tab-container {
+        flex: 1;
+        min-width: 0;
         margin-left: -12px;
         display: flex;
         background: oklch(93.2% 0.032 255.585); 
@@ -882,6 +1287,12 @@ show(model, result)`,
     opacity: 0.5;
   }
 
+  .stop-btn,
+  .stop-btn:hover:not(:disabled) {
+    background: #b42318;
+    color: #fff;
+  }
+
   .version-select-wrapper {
     display: flex;
     align-items: center;
@@ -930,9 +1341,38 @@ show(model, result)`,
     color: #000000;
   }
 
-  .dropdown-container {
+  .dropdown-container,
+  .share-container {
     position: relative;
     display: inline-block;
+  }
+
+  .share-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 4px;
+    z-index: 20;
+    width: 180px;
+    padding: 4px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+  }
+
+  .share-menu button {
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .share-menu button:hover {
+    background: #f1f5f9;
   }
 
   .dropdown-menu {
@@ -1018,8 +1458,294 @@ show(model, result)`,
 
   .header-left {
     display: flex;
-    align-items: center; 
+    align-items: center;
+    min-width: 0;
     gap: 20px;
+  }
+
+  :global(.code-editor .cm-editor) {
+    height: 100%;
+  }
+
+  :global(.code-editor .cm-scroller) {
+    overflow: auto;
+  }
+
+  .mobile-view-switcher {
+    display: none;
+  }
+
+  /* Let the header wrap before its controls become cramped. */
+  @media (max-width: 1200px) {
+    header {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    nav {
+      width: 100%;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
+    }
+  }
+
+  /* Stack the workspace while preserving the editor-first layout. */
+  @media (max-width: 900px) {
+    :global(body) {
+      height: auto;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .container {
+      height: auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    header {
+      position: relative;
+      padding: 0.875rem 1rem;
+    }
+
+    .main-content {
+      grid-template-columns: minmax(0, 1fr);
+      flex-grow: 0;
+      overflow: visible;
+    }
+
+    .resizer {
+      display: none;
+    }
+
+    .code-panel {
+      height: clamp(420px, 65dvh, 680px);
+    }
+
+    .visualization-panel {
+      gap: 1rem;
+      overflow: visible;
+    }
+
+    .model-preview {
+      flex: none;
+      height: clamp(320px, 55dvh, 560px);
+    }
+
+    .output-console {
+      flex: none;
+      min-height: 220px;
+      max-height: 45dvh;
+    }
+  }
+
+  @media (max-width: 600px) {
+    :global(body) {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    .container {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+    }
+
+    header {
+      flex: none;
+      gap: 0.5rem;
+      padding: max(0.5rem, env(safe-area-inset-top)) 0.75rem 0.5rem;
+    }
+
+    .header-left {
+      width: 100%;
+      gap: 0.65rem;
+    }
+
+    h1 {
+      flex: 1;
+      font-size: 1.05rem;
+      line-height: 1.2;
+    }
+
+    .github-logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .nav-link {
+      padding: 0;
+      font-size: 0.8rem;
+    }
+
+    nav {
+      width: 100%;
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      gap: 0.4rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-btn {
+      flex: 0 0 auto;
+      width: auto;
+      min-height: 36px;
+      margin: 0;
+      padding: 7px 12px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .version-select-wrapper {
+      flex: 0 0 auto;
+      margin: 0;
+      gap: 0.3rem;
+    }
+
+    .version-label {
+      font-size: 0.8rem;
+    }
+
+    .nav-select {
+      min-height: 36px;
+      padding: 7px 24px 7px 8px;
+      font-size: 0.8rem;
+    }
+
+    .btn-examples {
+      width: auto;
+    }
+
+    .dropdown-menu,
+    .share-menu {
+      position: fixed;
+      top: 96px;
+      right: 0.75rem;
+      left: 0.75rem;
+      width: auto;
+      min-width: 0;
+      max-height: 55dvh;
+      transform: none;
+      border-radius: 5px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .mobile-view-switcher {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      flex: none;
+      gap: 4px;
+      padding: 6px 0.75rem;
+      background: #fafafa;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .mobile-view-switcher button {
+      min-height: 34px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: #555;
+      font-weight: 600;
+    }
+
+    .mobile-view-switcher button.active {
+      background: oklch(55.7% 0.165 254.624);
+      color: white;
+    }
+
+    .main-content {
+      display: block;
+      flex: 1;
+      min-height: 0;
+      padding: 0.5rem;
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+      overflow: hidden;
+    }
+
+    .main-content .code-panel,
+    .main-content .visualization-panel {
+      display: none;
+    }
+
+    .main-content.show-editor .code-panel,
+    .main-content.show-preview .visualization-panel,
+    .main-content.show-console .visualization-panel {
+      display: flex;
+    }
+
+    .code-panel,
+    .visualization-panel {
+      width: 100%;
+      height: 100%;
+    }
+
+    .visualization-panel {
+      gap: 0;
+    }
+
+    .main-content.show-preview .output-console,
+    .main-content.show-console .model-preview {
+      display: none;
+    }
+
+    .model-preview,
+    .output-console {
+      flex: 1;
+      width: 100%;
+      height: auto;
+      min-height: 0;
+      max-height: none;
+      padding: 0.5rem;
+    }
+
+    .output-console {
+      font-size: 0.85rem;
+    }
+
+    .editor-header {
+      gap: 0.5rem;
+      padding: 4px 8px;
+    }
+
+    .tab-container {
+      min-width: 0;
+      margin-left: 0;
+    }
+
+    .tab {
+      padding: 6px 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .editor-header > .nav-btn {
+      flex: 0 0 auto;
+      padding-inline: 8px;
+    }
+
+    .save-toast {
+      right: 0.75rem;
+      bottom: max(1rem, env(safe-area-inset-bottom));
+      left: 0.75rem;
+      width: auto;
+      text-align: center;
+      transform: none;
+    }
+  }
+
+  @media (hover: none) {
+    .nav-btn:hover:not(:disabled) {
+      transform: none;
+    }
   }
 
 </style>
