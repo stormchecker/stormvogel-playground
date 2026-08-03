@@ -76,8 +76,10 @@ show(model, result)`,
 
     const resizeSupport = `
       <style>
-        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+        html { width: 100%; height: 100%; margin: 0; }
+        body { width: 100%; min-height: 100%; margin: 0; overflow: auto; }
         body > div { width: 100% !important; height: 100% !important; min-height: 0 !important; box-sizing: border-box; }
+        body > img { display: block; max-width: 100%; height: auto; }
         canvas, svg { width: 100% !important; height: 100% !important; object-fit: contain; }
       </style>
       <script>
@@ -92,9 +94,13 @@ show(model, result)`,
         })();
       </` + `script>`;
 
-    return /<\/body>/i.test(html)
-      ? html.replace(/<\/body>/i, `${resizeSupport}</body>`)
-      : `${html}${resizeSupport}`;
+    if (/<\/body>/i.test(html)) {
+      return html.replace(/<\/body>/i, `${resizeSupport}</body>`);
+    }
+    if (/<\/html>/i.test(html)) {
+      return html.replace(/<\/html>/i, `${resizeSupport}</html>`);
+    }
+    return `${html}${resizeSupport}`;
   }
 
   // Group examples by category

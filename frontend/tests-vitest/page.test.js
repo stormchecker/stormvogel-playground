@@ -150,6 +150,50 @@ describe('Page Component', () => {
     vi.restoreAllMocks();
   });
 
+  test('makes image output responsive and scrollable', async () => {
+    const imageHtml = '<!DOCTYPE html><html><img src="data:image/png;base64,abc" /></html>';
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url.endsWith('/api/startup')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({ status: 'success' }),
+        });
+      }
+      if (url.endsWith('/api/save-tabs')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({ status: 'success' }),
+        });
+      }
+      if (url.endsWith('/api/execute')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({
+            status: 'success',
+            output_html: imageHtml,
+            output_non_html: '',
+            message: null,
+          }),
+        });
+      }
+      if (url.endsWith('/api/lint')) {
+        return Promise.resolve({
+          json: () => Promise.resolve({ error: '' }),
+        });
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    }));
+
+    render(Page);
+    const executeButton = screen.getByRole('button', { name: '▶ Run' });
+    await waitFor(() => expect(executeButton).toBeEnabled());
+    await fireEvent.click(executeButton);
+
+    await waitFor(() => {
+      const srcdoc = screen.getByTitle('Model visualization output').getAttribute('srcdoc');
+      expect(srcdoc).toContain('body { width: 100%; min-height: 100%; margin: 0; overflow: auto; }');
+      expect(srcdoc).toContain('body > img { display: block; max-width: 100%; height: auto; }');
+      expect(srcdoc.indexOf('<style>')).toBeLessThan(srcdoc.indexOf('</html>'));
+    });
+  });
+
   test('lints code and displays errors', async () => {
     render(Page);
     // Simulate entering code in the CodeMirror editor
