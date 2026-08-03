@@ -84,16 +84,7 @@ python3 -c "import secrets; print(f'FLASK_SECRET_KEY=\"{secrets.token_urlsafe(32
     npm test
     ```
 
-2. Playwright frontend testing (integration) 
-    * In frontend directory
-    ```bash
-    npm run playwright
-    ```
-    * You can also run the tests in ui mode:
-    ```bash
-    npm run playwright:ui
-    ```
-3. Pytest backend testing (unit)
+2. Pytest backend testing (unit)
     * In backend directory
     ```bash
     pytest

@@ -69,10 +69,12 @@ describe('Page Component', () => {
     const editorElement = document.querySelector('.code-editor');
     // Ensure the editor contains the expected text
     expect(editorElement.textContent).toContain('print("model file")');
+    expect(screen.getByRole('button', { name: '▶ Run' })).toBeEnabled();
 
-    // Check if the prism file is also loaded
+    // Check if the prism file is also loaded, but cannot be executed directly
     fireEvent.click(screen.getByText('Model.prism'));
     expect(editorElement.textContent).toContain('print("prism file")');
+    expect(screen.getByRole('button', { name: '▶ Run' })).toBeDisabled();
   });
 
   test('saves non-empty code to local storage', async () => {

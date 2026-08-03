@@ -8,12 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "coverage": "vitest run --coverage",
-    "playwright": "playwright test",
-    "playwright:ui": "playwright test --ui"
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@playwright/test": "^1.51.1",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.2.7",

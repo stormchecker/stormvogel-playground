@@ -21,7 +21,8 @@
   let saveStatus = 'idle'; // Variable for checking the save status
   let saveToast = false; // Show a pop-up ('toast') whent the code is saved successfully
   let shareToast = false; // Show a pop-up ('toast') when the share link is copied
-  let activeTab = "welcome.py"; // Track the active tab  
+  let activeTab = "welcome.py"; // Track the active tab
+  $: isExecutableFile = activeTab.toLowerCase().endsWith('.py');
   let tabs = {
     "welcome.py": `# Welcome to the Stormvogel playground!
 # Here is a small snippet to get you started:
@@ -376,6 +377,12 @@ show(model, result)`,
   }
 
   async function executeCode() {
+    // Only Python tabs can be executed. Other files are available to Python
+    // scripts in the workspace, but are not executable themselves.
+    if (!isExecutableFile || isExecuting) {
+      return;
+    }
+
     isExecuting = true;
     // Save all tabs to the container before execution
     const tabsSaved = await saveTabs();
@@ -614,9 +621,11 @@ show(model, result)`,
               >+</button
           >
       </div>
-        <button 
-          on:click={executeCode} 
-          class="nav-btn" 
+        <button
+          on:click={executeCode}
+          class="nav-btn"
+          disabled={!isExecutableFile || isExecuting}
+          title={isExecutableFile ? 'Run the active Python file' : 'Only Python files can be run'}
           style={isExecuting ? "background: oklch(93.2% 0.032 255.585);" : ""}
         >
           <span class="button-content">
@@ -861,11 +870,16 @@ show(model, result)`,
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   }
 
-  .nav-btn:hover {
+  .nav-btn:hover:not(:disabled) {
     background: oklch(93.2% 0.032 255.585);
     color: oklch(40.7% 0.165 254.624);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 
   .version-select-wrapper {
