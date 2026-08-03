@@ -1,5 +1,6 @@
 import stormpy
 from stormvogel import *
+from stormvogel.stormpy_utils import mapping
 from enum import Enum
 from copy import deepcopy
 
@@ -20,7 +21,7 @@ class GameState(Enum):
     PLAYERS_WON = 1
     RAVEN_WON = 2
 
-class Orchard(bird.State):
+class Orchard(bird.BirdState):
     def __init__(self, fruit_types, num_fruits, raven_distance):
         self.trees = {f: num_fruits for f in fruit_types}
         self.raven = raven_distance
@@ -50,7 +51,7 @@ def delta(state, action):
     if state.dice is None:
         p = 1 / (len(state.trees) + 2)
         # Replace point probability with an interval [p - 1/36, p + 1/36]
-        p_interval = model.Interval(p - 1/36, p + 1/36)
+        p_interval = Interval(p - 1/36, p + 1/36)
         outcomes = []
         for fruit in state.trees:
             s = deepcopy(state); s.dice = (DiceOutcome.FRUIT, fruit); outcomes.append((p_interval, s))

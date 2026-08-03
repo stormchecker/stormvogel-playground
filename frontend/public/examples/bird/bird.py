@@ -7,10 +7,10 @@ def available_actions(s):
         return [""]
 
 def delta(s, a):
-    if "study" in a:
-        return ["studied"]
-    elif "don't study" in a:
+    if "don't study" in a:
         return [(1, "didn't study")]
+    elif "study" in a:
+        return ["studied"]
     elif s == "studied":
         return [(9/10, "pass test"), (1/10, "fail test")]
     elif s == "didn't study":
@@ -25,7 +25,7 @@ def labels(s):
 def rewards(s: bird.State, a: bird.Action):
     if s == "pass test":
         return {"R":100}
-    if s == "didn't study":
+    if s == "fail test":
         return {"R":15}
     else:
         return {"R":0}

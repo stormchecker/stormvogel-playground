@@ -1,5 +1,6 @@
 import stormpy
 from stormvogel import *
+from stormvogel.stormpy_utils import mapping
 from enum import Enum
 from copy import deepcopy
 
@@ -19,7 +20,7 @@ class GameState(Enum):
     PLAYERS_WON = 1
     RAVEN_WON = 2
 
-class Orchard(bird.State):
+class Orchard(bird.BirdState):
     def __init__(self, fruit_types, num_fruits, raven_distance):
         self.trees = {f: num_fruits for f in fruit_types}
         self.raven = raven_distance
