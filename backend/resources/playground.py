@@ -1,5 +1,4 @@
 # Playground utility functions
-import stormvogel
 import base64
 import os
 import io
@@ -9,6 +8,7 @@ def show(something: any, something_other: any = None, **kwargs) -> str:
     """
     Convert the input to HTML for display in the playground.
     """
+    import stormvogel
     def add_doctype(html: str) -> str:
         """Add a doctype to the HTML string."""
         return f"<!DOCTYPE html>\n<html>{html}</html>"
@@ -16,7 +16,9 @@ def show(something: any, something_other: any = None, **kwargs) -> str:
     if isinstance(something, stormvogel.Model):
         vis = stormvogel._show(something, something_other, do_init_server=False, **kwargs)
         print(vis.generate_html())
-    elif str(type(something)).startswith("<class 'stormpy.storage.storage.Sparse"):
+    elif (type(something).__module__.startswith("stormpy.storage.")
+          and type(something).__name__.startswith("Sparse")
+          and hasattr(something, "states")):
         import stormvogel.stormpy_utils.mapping as mapping
         import stormvogel.stormpy_utils.convert_results as convert_results
 
